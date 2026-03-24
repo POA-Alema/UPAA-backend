@@ -58,5 +58,5 @@ backend/
     ```
 
 5.  **Acessar a Documentação (Swagger)**:
-    *   URL: `http://localhost:3000/api`
+    *   URL: `http://localhost:3001/api`
 
