@@ -18,7 +18,7 @@ export class CreateConstructionDto {
   @ApiProperty()
   @IsNumber()
   longitude: number;
-  
+
   @ApiProperty()
   @IsArray()
   @IsOptional()
