@@ -53,6 +53,7 @@ jobs:
   quality:
     name: Quality Checks
     runs-on: ubuntu-latest
+    needs: lint
 
     services:
       mongodb:
@@ -104,20 +105,3 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 7
-
-  required:
-      name: All checks passed
-      runs-on: ubuntu-latest
-      if: ${{ always() }}
-      needs:
-        - quality
-        - lint
-      steps:
-      - name: Check results           # ✅ step obrigatório adicionado
-        run: |
-          if [[ "${{ needs.quality.result }}" != "success" ||
-                "${{ needs.lint.result }}"    != "success"]; then
-            echo "One or more required jobs failed."
-            exit 1
-          fi
-          echo "All checks passed."
