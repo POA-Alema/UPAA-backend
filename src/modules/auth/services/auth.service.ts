@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { LoginDto } from '../dto/login.dto';
 
 @Injectable()
 export class AuthService {
-  async login(user: any) {
-    return { access_token: 'fake-jwt-token' };
+  login(loginDto: LoginDto) {
+    return { access_token: loginDto};
   }
 }
