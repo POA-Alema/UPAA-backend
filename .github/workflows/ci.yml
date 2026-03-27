@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [main, develop]
 
+
 defaults:
   run:
     shell: bash
@@ -44,13 +45,13 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: npm
@@ -82,8 +83,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
       - run: npm ci
@@ -111,15 +112,15 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
             
       # ── Prisma ──
       - name: Generate Prisma client
@@ -147,9 +148,20 @@ jobs:
           retention-days: 7
 
   required:
+      name: All checks passed
       runs-on: ubuntu-latest
       if: ${{ always() }}
       needs:
         - quality
         - lint
         - knip
+      steps:
+      - name: Check results           # ✅ step obrigatório adicionado
+        run: |
+          if [[ "${{ needs.quality.result }}" != "success" ||
+                "${{ needs.lint.result }}"    != "success" ||
+                "${{ needs.knip.result }}"    != "success" ]]; then
+            echo "One or more required jobs failed."
+            exit 1
+          fi
+          echo "All checks passed."
