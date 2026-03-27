@@ -1,13 +1,8 @@
 name: Backend Pipeline
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
-    types: [opened, reopened, closed]
-permissions:
-  contents: read
 
 defaults:
   run:
