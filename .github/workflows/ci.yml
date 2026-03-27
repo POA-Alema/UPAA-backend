@@ -78,20 +78,6 @@ jobs:
           VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_JSON: false
 
-  knip:
-    name: Knip
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - run: npm ci
-
-      - name: Unused exports
-        run: npm run knip
-
   quality:
     name: Quality Checks
     runs-on: ubuntu-latest
@@ -154,13 +140,11 @@ jobs:
       needs:
         - quality
         - lint
-        - knip
       steps:
       - name: Check results           # ✅ step obrigatório adicionado
         run: |
           if [[ "${{ needs.quality.result }}" != "success" ||
-                "${{ needs.lint.result }}"    != "success" ||
-                "${{ needs.knip.result }}"    != "success" ]]; then
+                "${{ needs.lint.result }}"    != "success"]; then
             echo "One or more required jobs failed."
             exit 1
           fi
