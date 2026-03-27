@@ -1,0 +1,301 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+    types: [opened, reopened, closed]
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  commitlint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install commitlint
+        run: npm install -D @commitlint/cli @commitlint/config-conventional
+      - name: Print versions
+        run: |
+          git --version
+          node --version
+          npm --version
+          npx commitlint --version
+      - name: Validate current commit (last commit) with commitlint
+        if: github.event_name == 'push'
+        run: npx commitlint --last --verbose
+
+      - name: Validate PR commit messages
+        if: github.event_name == 'pull_request'    
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --to HEAD --verbose
+      
+  lint:
+    name: Lint Codebase
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install Dependencies
+        id: install
+        run: npm ci
+
+      - name: Lint Codebase
+        id: super-linter
+        uses: super-linter/super-linter/slim@v8
+        env:
+          CHECKOV_FILE_NAME: .checkov.yml
+          DEFAULT_BRANCH: main
+          FILTER_REGEX_EXCLUDE: dist/**/*
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINTER_RULES_PATH: .
+          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
+          VALIDATE_JAVASCRIPT_ES: false
+          VALIDATE_JSCPD: false
+          VALIDATE_TYPESCRIPT_ES: false
+          VALIDATE_JSON: false
+
+  knip:
+    name: Knip
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 'lts/*'
+      - run: npm ci
+
+      - name: Unused exports
+        run: npm run knip
+
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: mongo
+          MONGO_INITDB_ROOT_PASSWORD: mongo
+          MONGO_INITDB_DATABASE: app_test
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+            
+      # ── Prisma ──
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: mongodb://mongo:mongo@localhost:27017/app_test?authSource=admin
+
+      # ── Build de produção ──
+      - name: Build
+        run: npm run build
+
+      # ── Testes unitários ──
+      - name: Run unit tests
+        run: npm run test -- --coverage --passWithNoTests
+        env:
+          DATABASE_URL: mongodb://mongo:mongo@localhost:27017/app_test?authSource=admin
+          NODE_ENV: test
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # test:
+  #   strategy:
+  #     fail-fast: ${{ github.event_name == 'merge_group' }}
+  #     matrix:
+  #       config:
+  #         # PRs only check the newest and oldest Node versions.
+  #         # macOS only ever checks the neest and oldest Node versions, but never in PR runs.
+  #         - os: ubuntu-latest
+  #           node-version: '24'
+  #           bundle: true
+  #         - os: windows-latest
+  #           node-version: '24'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'merge_group' }}
+  #         - os: macos-latest
+  #           node-version: '24'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+
+  #         - os: ubuntu-latest
+  #           node-version: '22'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+  #         - os: windows-latest
+  #           node-version: '22'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+
+  #         - os: ubuntu-latest
+  #           node-version: '20'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+  #         - os: windows-latest
+  #           node-version: '20'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+
+  #         - os: ubuntu-latest
+  #           node-version: '18'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+  #         - os: windows-latest
+  #           node-version: '18'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+
+  #         - os: ubuntu-latest
+  #           node-version: '16'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+  #         - os: windows-latest
+  #           node-version: '16'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+  #         - os: macos-latest
+  #           node-version: '16'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+
+  #         - os: ubuntu-latest
+  #           node-version: '14'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'merge_group' }}
+  #         - os: windows-latest
+  #           node-version: '14'
+  #           bundle: true
+  #           skip: ${{ github.event_name == 'merge_group' }}
+  #           # Node 14 does not support macOS ARM.
+
+  #         # --no-bundle build
+  #         - os: ubuntu-latest
+  #           node-version: 'lts/*'
+  #           bundle: false
+  #           skip: ${{ github.event_name == 'merge_group' }}
+
+  #       exclude:
+  #         - config:
+  #             skip: true
+
+  #   runs-on: ${{ matrix.config.os }}
+  #   name: Test Node ${{ matrix.config.node-version }} on ${{ matrix.config.os }}${{ (!matrix.config.bundle && ' with --no-bundle') || '' }}
+
+  #   steps:
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - name: Use node version ${{ matrix.config.node-version }}
+  #       uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+  #       with:
+  #         node-version: ${{ matrix.config.node-version }}
+  #         check-latest: true
+  #     - run: npm ci
+
+  #     - name: Tests
+  #       id: test
+  #       # run tests, but lint separately
+  #       env:
+  #         BUNDLE: ${{ matrix.config.bundle }}
+  #       run: npm run test -- --no-lint --bundle="$BUNDLE"
+
+  #     - name: Print baseline diff on failure
+  #       if: ${{ failure() && steps.test.conclusion == 'failure' }}
+  #       run: |
+  #         npx hereby baseline-accept
+  #         git add tests/baselines/reference
+  #         git diff --staged --exit-code
+
+  # coverage:
+  #   if: ${{ github.event_name != 'merge_group' }}
+
+  #   runs-on:
+  #     - 'self-hosted'
+  #     - '1ES.Pool=TypeScript-1ES-GitHub-Large'
+  #     - '1ES.ImageOverride=azure-linux-3'
+
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+
+  #   steps:
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+  #       with:
+  #         node-version: 'lts/*'
+  #     - run: npm ci
+
+  #     - name: Run tests with coverage
+  #       run: npm test -- --no-lint --coverage
+
+  #     - name: Upload coverage artifact
+  #       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+  #       with:
+  #         name: coverage
+  #         path: coverage
+
+  #     - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5.5.3
+  #       with:
+  #         use_oidc: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
+  #         disable_search: true
+  #         files: ./coverage/codecov.json
+
+  required:
+      runs-on: ubuntu-latest
+      if: ${{ always() }}
+      needs:
+        - quality
+        # - test
+        # - coverage
+        - lint
+        - knip
