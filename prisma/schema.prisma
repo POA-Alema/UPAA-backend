@@ -39,3 +39,14 @@ enum Role {
   USER
   ADMIN
 }
+
+sources           String[] // lista de fontes
+
+  // imagens por categoria
+  floorPlans        String[] // planta baixa
+  facades           String[]
+  externalPhotos    String[]
+  internalPhotos    String[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt

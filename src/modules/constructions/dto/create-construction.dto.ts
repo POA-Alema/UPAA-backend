@@ -2,25 +2,54 @@ import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateConstructionDto {
-  @ApiProperty()
   @IsString()
   title: string;
 
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
+  @IsOptional() @IsString()
+  location?: string;
+
+  @IsOptional() @IsString()
+  date?: string;
+
+  @IsOptional() @IsString()
+  project?: string;
+
+  @IsOptional() @IsString()
+  construction?: string;
+
+  @IsOptional() @IsString()
+  ornaments?: string;
+
+  @IsOptional() @IsString()
+  builtArea?: string;
+
+  @IsOptional() @IsString()
+  currentOccupation?: string;
+
+  @IsOptional() @IsString()
+  restorationProject?: string;
+
+  @IsOptional() @IsString()
+  heritageListing?: string;
+
+  @IsOptional() @IsString()
   description?: string;
 
-  @ApiProperty()
-  @IsNumber()
-  latitude: number;
+  @IsOptional() @IsString()
+  author?: string;
 
-  @ApiProperty()
-  @IsNumber()
-  longitude: number;
+  @IsOptional() @IsArray()
+  sources?: string[];
 
-  @ApiProperty()
-  @IsArray()
-  @IsOptional()
-  images?: string[];
+  @IsOptional() @IsArray()
+  floorPlans?: string[];
+
+  @IsOptional() @IsArray()
+  facades?: string[];
+
+  @IsOptional() @IsArray()
+  externalPhotos?: string[];
+
+  @IsOptional() @IsArray()
+  internalPhotos?: string[];
 }
