@@ -6,6 +6,7 @@ import { LandingPageDto } from '../dto/landing-page.dto';
 @ApiTags('landingPage')
 @Controller('landingPage')
 export class LandingPageController {
+
   constructor(private readonly landingPageService: LandingPageService) {}
 
   @Get()
