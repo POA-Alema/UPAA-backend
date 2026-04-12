@@ -5,6 +5,7 @@ import { CtaDto } from './cta.dto';
 
 
 class InstitutionItemDto{
+
   @ApiProperty()
   @IsString()
   title: string;

@@ -4,6 +4,7 @@ import { CtaDto } from './cta.dto';
 import { Type } from 'class-transformer';
 
 export class ArchitectSectionDto{
+
   @ApiProperty()
   @IsString()
   imageURL: string;

@@ -6,6 +6,7 @@ import { ImmigrationSectionDto } from './immigration.section.dto';
 import { InstitutionDto } from './institution.dto';
 
 export class LandingPageDto{
+
   @ApiProperty()
   @IsString()
   mainTitle: string;
