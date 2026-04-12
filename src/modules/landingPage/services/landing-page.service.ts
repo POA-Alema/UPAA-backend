@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { LandingPageDto } from '../dto/landing-page.dto';
 
 @Injectable()
 export class LandingPageService {
@@ -27,7 +28,7 @@ export class LandingPageService {
     return data[normalizedLang] || data['pt'];
   }
 
-  create(data: any) {
+  create(data: LandingPageDto) {
     return data;
   }
 }
