@@ -10,4 +10,5 @@ import { LandingPageModule } from './modules/landingPage/landing-page.module';
   controllers: [],
   providers: [PrismaService],
 })
+
 export class AppModule {}
