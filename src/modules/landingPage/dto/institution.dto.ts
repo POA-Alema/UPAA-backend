@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 import { CtaDto } from './cta.dto';
 
 
-class InstitutionItemDto {
+class InstitutionItemDto{
   @ApiProperty()
   @IsString()
   title: string;

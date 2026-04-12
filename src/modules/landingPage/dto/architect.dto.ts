@@ -3,7 +3,7 @@ import { IsNumber, IsString, ValidateNested } from 'class-validator';
 import { CtaDto } from './cta.dto';
 import { Type } from 'class-transformer';
 
-export class ArchitectSectionDto {
+export class ArchitectSectionDto{
   @ApiProperty()
   @IsString()
   imageURL: string;
