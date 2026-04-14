@@ -14,7 +14,7 @@ jobs:
       - name: Send opened PR to Discord
         run: |
           curl -H "Content-Type: application/json" \
-          -d "$(jq -nc --arg content "📣 [${{ github.event.repository.name }}] PR aberto: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}" '{content: $content}')" \
+          -d "$(jq -nc --arg content "[${{ github.event.repository.name }}] PR aberto: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }} - ${{ github.event.pull_request.html_url }}" '{content: $content}')" \
           "${{ secrets.DISCORD_WEBHOOK }}"
 
   notify-merged:
@@ -24,5 +24,5 @@ jobs:
       - name: Send merged PR to Discord
         run: |
           curl -H "Content-Type: application/json" \
-          -d "$(jq -nc --arg content "✅ [${{ github.event.repository.name }}] PR merged na develop: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}\n${{ github.event.pull_request.html_url }}" '{content: $content}')" \
+          -d "$(jq -nc --arg content "✅ [${{ github.event.repository.name }}] PR merged na develop: #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }} - ${{ github.event.pull_request.html_url }}" '{content: $content}')" \
           "${{ secrets.DISCORD_WEBHOOK }}"
