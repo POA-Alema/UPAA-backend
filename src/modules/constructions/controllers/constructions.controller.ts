@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ConstructionsService } from '../services/constructions.service';
 import { CreateConstructionDto } from '../dto/create-construction.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('constructions')
 @Controller('constructions')
@@ -12,6 +12,13 @@ export class ConstructionsController {
   @ApiOperation({ summary: 'Listar todas as obras' })
   findAll() {
     return this.constructionsService.findAll();
+  }
+
+  @Get('map')
+  @ApiOperation({ summary: 'Listar edificações ativas para exibição no mapa' })
+  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
+  findAllForMap(@Query('lang') lang?: string) {
+    return this.constructionsService.findAllForMap(lang);
   }
 
   @Post()
