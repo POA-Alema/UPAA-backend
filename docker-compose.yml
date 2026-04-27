@@ -4,21 +4,31 @@ services:
   backend:
     build: .
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
-      - DATABASE_URL=mongodb://mongo:27017/porto_alegre_alema
+      DATABASE_URL: mongodb://mongo:27017/porto_alegre_alema
+      NODE_ENV: production
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy  # Aguarda o MongoDB ficar saudável
+    restart: on-failure
 
   mongo:
-    image: mongo:6.0
+    image: mongo:6
     restart: always
+    ports:
+      - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: porto_alegre_alema
-    ports:
-      - '27017:27017'
     volumes:
       - mongo_data:/data/db
+      - ./docker/mongo-init:/docker-entrypoint-initdb.d
+    healthcheck:  # Adicionar health check
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   mongo_data:
