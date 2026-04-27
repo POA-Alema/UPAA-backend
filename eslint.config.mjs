@@ -9,5 +9,16 @@ export default defineConfig(
   tseslint.configs.recommended,
   {
     ignores: ["commitlint.config.js"],
+  },
+  {
+    files: ["docker/mongo-init/**/*.js"],
+    languageOptions: {
+      globals: {
+        ObjectId: "readonly",
+        db: "readonly",
+        print: "readonly",
+        use: "readonly",
+      },
+    },
   }
 );
