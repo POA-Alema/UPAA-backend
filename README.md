@@ -41,7 +41,7 @@ backend/
     npm install
     ```
 
-# 2.  **Subir o banco de dados**: (ainda em andamento)!
+# 2.  **Subir o banco de dados**: 
 
 ### Subir apenas o MongoDB
 ```bash
