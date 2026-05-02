@@ -1,34 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import { LandingPageDto } from '../dto/landing-page.dto';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class LandingPageService {
-  private getMockData() {
+  private readonly langs = ['pt', 'en', 'de'];
+
+  constructor(private prisma: PrismaService) {}
+
+  async findAll(lang: string) {
+    if (!this.langs.includes(lang)) {
+      throw new BadRequestException('Idioma inválido.');
+    }
+
+    const landingPage = await this.prisma.landingPage.findFirst();
+
+    if (!landingPage) {
+      throw new NotFoundException('Dados da landing page não encontrado.');
+    }
+
     return {
-      pt: {
-        mainTitle: 'O Legado',
-        subtitle: 'Explorando...',
-      },
-      en: {
-        mainTitle: 'The Legacy',
-        subtitle: 'Exploring...',
-      },
-      de: {
-        mainTitle: 'Das Erbe',
-        subtitle: 'Erkunden...',
-      },
+      id: landingPage.id,
+      mainTitle: this.translate(landingPage.mainTitle, lang),
+      subtitle: this.translate(landingPage.subtitle, lang),
+      architectSection: this.translate(landingPage.architectSection, lang),
+      immigrationSection: this.translate(landingPage.immigrationSection, lang),
+      institutionsSection: this.translate(landingPage.institutionsSection, lang),
+      updated_at: landingPage.updatedAt,
     };
   }
 
-  find(lang: string = 'pt') {
-    const data = this.getMockData();
+  private translate(value: any, lang: string): any {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.translate(item, lang));
+    }
 
-    const normalizedLang = (lang || 'pt').toLowerCase();
+    if (value && typeof value === 'object') {
+      if (this.langs.some((key) => key in value)) {
+        return value[lang] ?? value.pt;
+      }
 
-    return data[normalizedLang] || data['pt'];
-  }
+      return Object.fromEntries(
+        Object.entries(value).map(([key, item]) => [key, this.translate(item, lang)]),
+      );
+    }
 
-  create(data: LandingPageDto) {
-    return data;
+    return value;
   }
 }
