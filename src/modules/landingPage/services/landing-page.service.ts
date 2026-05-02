@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { JsonObject } from '@prisma/client/runtime/binary';
 
 @Injectable()
 export class LandingPageService {
@@ -29,21 +30,28 @@ export class LandingPageService {
     };
   }
 
-  private translate(value: any, lang: string): any {
+  private translate(value: unknown, lang: string): unknown {
     if (Array.isArray(value)) {
       return value.map((item) => this.translate(item, lang));
     }
 
-    if (value && typeof value === 'object') {
+    if (this.isObject(value)) {
       if (this.langs.some((key) => key in value)) {
         return value[lang] ?? value.pt;
       }
 
       return Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [key, this.translate(item, lang)]),
+        Object.entries(value).map(([key, item]) => [
+          key,
+          this.translate(item, lang),
+        ]),
       );
     }
 
     return value;
+  }
+
+  private isObject(value: unknown): value is JsonObject {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 }

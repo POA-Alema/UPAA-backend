@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────
 # Stage 1: Dependencies
 # ─────────────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:20 AS deps
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN npm ci --only=production && \
 # ─────────────────────────────────────────────
 # Stage 2: Builder
 # ─────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
@@ -31,15 +31,15 @@ RUN npx prisma generate && \
 # ─────────────────────────────────────────────
 # Stage 3: Production image
 # ─────────────────────────────────────────────
-FROM node:20-alpine AS production
+FROM node:20 AS production
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
 # Segurança: usuário não-root
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nestjs
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 nestjs
 
 COPY --from=deps --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
@@ -53,5 +53,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget -qO- http://localhost:3000/health || exit 1
 
-# Roda migrations e inicia a aplicação
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "npx prisma db push && node dist/main"]

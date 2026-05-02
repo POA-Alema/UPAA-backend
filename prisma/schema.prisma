@@ -1,6 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+// Configuração do Cliente e Banco de Dados
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,32 +8,127 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum PubStatus {
+  draft
+  published
+  archived
 }
 
-model Construction {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String?
-  latitude    Float
-  longitude   Float
-  address     String?
-  buildYear   Int?     
-  architect   String?  
-  images      String[] // URLs das imagens no S3
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+enum ImageType {
+  planta_baixa
+  fachada
+  externa
+  interna
 }
 
-enum Role {
-  USER
-  ADMIN
+// ==========================================
+// MODELS
+// ==========================================
+
+model AdminUser {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String // Ex: admin, editor
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relações para auditoria
+  updatedLandingPages LandingPage[]
+  createdArchitects   Architect[]   @relation("ArchitectCreatedBy")
+  updatedArchitects   Architect[]   @relation("ArchitectUpdatedBy")
+  createdBuildings    Building[]    @relation("BuildingCreatedBy")
+  updatedBuildings    Building[]    @relation("BuildingUpdatedBy")
+
+  @@map("admin_users")
+}
+
+model LandingPage {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  mainTitle Json // {pt, en, de}
+  subtitle  Json // {pt, en, de}
+
+  architectSection    Json // { imageURL, title, content, ... }
+  immigrationSection  Json // { imageURL, title, content, ... }
+  institutionsSection Json // { title, institutions: [...] }
+
+  updatedBy   AdminUser @relation(fields: [updatedById], references: [id])
+  updatedById String    @db.ObjectId
+  updatedAt   DateTime  @updatedAt
+
+  @@map("landing_page")
+}
+
+model Architect {
+  id     String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug   String    @unique
+  status PubStatus @default(draft)
+
+  name            Json // { first, last, full }
+  media           Json // { portrait_url, alt_text: {pt,en,de} }
+  birth           Json // { date: {...}, place: {...} }
+  death           Json? // { date, place }
+  citizenship     String
+  occupation      String
+  about           Json // { pt, en, de }
+  characteristics Json // { style, influences, legacy }
+
+  // Relação com Edifícios
+  buildings Building[] @relation("ArchitectToBuilding")
+
+  // Auditoria
+  createdBy   AdminUser @relation("ArchitectCreatedBy", fields: [createdById], references: [id])
+  createdById String    @db.ObjectId
+  updatedBy   AdminUser @relation("ArchitectUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String    @db.ObjectId
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("architects")
+}
+
+model Building {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String    @unique
+  status    PubStatus @default(draft)
+  qrCodeKey String    @unique
+
+  // Relacionamento com Arquiteto
+  architect   Architect @relation("ArchitectToBuilding", fields: [architectId], references: [id])
+  architectId String    @db.ObjectId
+
+  name         Json // Nome atual (multilíngue)
+  originalName Json? // Nome histórico (multilíngue)
+  location     Json // Endereço (multilíngue)
+  coordinates  Json // { lat, lng }
+
+  // Ficha Técnica
+  constructionPeriod     String
+  constructor            String?
+  ornamentsAuthor        String?
+  builtArea              String?
+  currentOccupation      Json? // Multilíngue
+  restorationAndHeritage Json? // Multilíngue
+
+  // Conteúdo Visual e Textual
+  description  Json // Multilíngue
+  history      Json // Multilíngue
+  features     Json[] // Array de objetos { title, description, icon_url }
+  mediaGallery Json[] // Array de objetos { url, type: ImageType, caption }
+  sources      String[] // Lista de bibliografia
+
+  // Auditoria
+  createdBy   AdminUser @relation("BuildingCreatedBy", fields: [createdById], references: [id])
+  createdById String    @db.ObjectId
+  updatedBy   AdminUser @relation("BuildingUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String    @db.ObjectId
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("buildings")
 }

@@ -79,5 +79,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "mongosh ./docker/mongo-init/seed.js"
   }
 }
+
