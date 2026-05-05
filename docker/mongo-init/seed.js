@@ -351,29 +351,29 @@ db.landing_page.insertOne({
         order: 1
     },
     immigrationSection: {
-        imageURL: "/images/home/porto-alegre-centro-historico.jpg",
-        imgSubtitle: {
-            pt: "Centro Histórico de Porto Alegre",
-            en: "Porto Alegre Historic Center",
-            de: "Historisches Zentrum von Porto Alegre"
-        },
-        title: {
-            pt: "Cidade e memória",
-            en: "City and memory",
-            de: "Stadt und Erinnerung"
-        },
-        subtitle: {
-            pt: "Patrimônio urbano e presença alemã",
-            en: "Urban heritage and German presence",
-            de: "Städtisches Erbe und deutsche Präsenz"
-        },
-        content: {
-            pt: "A arquitetura do início do século XX revela conexões entre imigração, urbanização e identidade cultural em Porto Alegre.",
-            en: "Early twentieth-century architecture reveals connections between immigration, urbanization and cultural identity in Porto Alegre.",
-            de: "Die Architektur des frühen 20. Jahrhunderts zeigt Verbindungen zwischen Einwanderung, Urbanisierung und kultureller Identität in Porto Alegre."
-        },
-        order: 2
+    imageURL: "/images/home/imigracao-alema-rs.jpg",
+    imgSubtitle: {
+        pt: "Registros da imigração alemã no Rio Grande do Sul",
+        en: "Records of German immigration in Rio Grande do Sul",
+        de: "Aufzeichnungen der deutschen Einwanderung in Rio Grande do Sul"
     },
+    title: {
+        pt: "Imigração alemã",
+        en: "German immigration",
+        de: "Deutsche Einwanderung"
+    },
+    subtitle: {
+        pt: "Das colônias ao Centro Histórico",
+        en: "From colonies to the Historic Center",
+        de: "Von den Kolonien ins historische Zentrum"
+    },
+    content: {
+        pt: "A partir de 1824, imigrantes alemães chegaram ao Rio Grande do Sul e estabeleceram colônias que influenciaram profundamente a cultura, a economia e a arquitetura da região. Em Porto Alegre, essa presença se materializou em edificações do Centro Histórico que até hoje marcam a paisagem urbana da cidade.",
+        en: "From 1824 onwards, German immigrants arrived in Rio Grande do Sul and established colonies that deeply influenced the culture, economy and architecture of the region. In Porto Alegre, this presence materialized in buildings in the Historic Center that still mark the city's urban landscape today.",
+        de: "Ab 1824 kamen deutsche Einwanderer nach Rio Grande do Sul und gründeten Kolonien, die Kultur, Wirtschaft und Architektur der Region nachhaltig prägten. In Porto Alegre materialisierte sich diese Präsenz in Gebäuden des historischen Zentrums, die das Stadtbild bis heute prägen."
+    },
+    order: 2
+},
     institutionsSection: {
         title: {
             pt: "Instituições em destaque",
