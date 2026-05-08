@@ -1,6 +1,8 @@
 name: Backend Pipeline
 
 on:
+  push:
+    branches: [main, develop]
   pull_request:
     branches: [main, develop]
 
@@ -105,3 +107,27 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 7
+      
+  mirror:
+    name: Mirror to GitLab
+    runs-on: ubuntu-latest
+    needs: [commitlint, lint, quality]
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Push para GitLab
+        run: |
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@tools.ages.pucrs.br/uma-porto-alegre-alem/backend.git
+          CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
+          git push gitlab "HEAD:${CURRENT_BRANCH}" --force
+          git push gitlab --tags --force
