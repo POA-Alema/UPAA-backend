@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
 
@@ -52,11 +53,13 @@ export class LandingPageService {
   async create(dto: UpsertLandingPageDto, updatedById: string) {
     this.validateImmigrationSection(dto.immigrationSection);
 
+    const data: Prisma.LandingPageUncheckedCreateInput = {
+      ...(dto as Omit<Prisma.LandingPageUncheckedCreateInput, 'updatedById'>),
+      updatedById,
+    };
+
     return this.prisma.landingPage.create({
-      data: {
-        ...(dto as any),
-        updatedById,
-      },
+      data,
     });
   }
 
@@ -78,12 +81,14 @@ export class LandingPageService {
       this.validateImmigrationSection(dto.immigrationSection);
     }
 
+    const data: Prisma.LandingPageUncheckedUpdateInput = {
+      ...(dto as Prisma.LandingPageUncheckedUpdateInput),
+      updatedById,
+    };
+
     return this.prisma.landingPage.update({
       where: { id },
-      data: {
-        ...(dto as any),
-        updatedById,
-      },
+      data,
     });
   }
 

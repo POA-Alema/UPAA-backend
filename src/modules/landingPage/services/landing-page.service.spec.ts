@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { LandingPageService } from './landing-page.service';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { MultilingualTextDto } from '../dto/multilingual-text.dto';
 
 const MOCK_ADMIN_ID = '000000000000000000000000';
 
@@ -119,7 +120,7 @@ describe('LandingPageService', () => {
     it('deve lançar BadRequestException se title.pt estiver ausente', async () => {
       await expect(
         service.create(
-          { immigrationSection: { content: { pt: 'Conteúdo válido' } } as any },
+          { immigrationSection: { content: { pt: 'Conteúdo válido' } } },
           MOCK_ADMIN_ID,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -128,7 +129,12 @@ describe('LandingPageService', () => {
     it('deve lançar BadRequestException se content.pt estiver ausente', async () => {
       await expect(
         service.create(
-          { immigrationSection: { title: { pt: 'Título válido' } } as any },
+          {
+            immigrationSection: {
+              title: { pt: 'Título válido' },
+              content: {} as MultilingualTextDto,
+            },
+          },
           MOCK_ADMIN_ID,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -155,7 +161,9 @@ describe('LandingPageService', () => {
         },
         MOCK_ADMIN_ID,
       );
-      const section = result.immigrationSection as any;
+      const section = result.immigrationSection as {
+        title: { pt: string };
+      };
       expect(section.title.pt).toBe('Novo título');
     });
 
