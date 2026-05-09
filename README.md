@@ -122,3 +122,15 @@ npm run start:dev
 | `npx prisma db push` | Sincronizar schema com o banco |
 | `npx prisma studio` | Abrir interface gráfica para visualizar dados |
 | `npx prisma db push --force-reset` | Resetar o banco (cuidado!) |
+
+## Debug no VS Code ou IDEs compatÃ­veis
+
+Foi adicionada a configuraÃ§Ã£o [.vscode/launch.json](./.vscode/launch.json) para debug do backend.
+
+1. Abra a aba **Run and Debug**
+2. Selecione `NestJS: Debug (start:debug)`
+3. Inicie com `F5`
+
+Essa configuraÃ§Ã£o executa `npm run start:debug`, expÃµe o inspector do Node na porta `9229` e usa source maps para depurar os arquivos TypeScript.
+
+Se a aplicaÃ§Ã£o jÃ¡ estiver em execuÃ§Ã£o em modo debug, use a configuraÃ§Ã£o `Node: Attach (porta 9229)`.
