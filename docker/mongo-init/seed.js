@@ -1,6 +1,6 @@
 use("porto_alegre_alema");
 
-const adminId = new ObjectId();
+const adminId = ObjectId("000000000000000000000000");
 const architectId = new ObjectId();
 const margsId = new ObjectId();
 const memorialId = new ObjectId();
