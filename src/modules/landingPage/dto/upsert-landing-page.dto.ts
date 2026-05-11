@@ -9,6 +9,4 @@ export class UpsertLandingPageDto {
   @ValidateNested()
   @Type(() => ImmigrationSectionDto)
   immigrationSection?: ImmigrationSectionDto;
-
-  [key: string]: unknown;
 }
