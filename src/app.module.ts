@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { LandingPageModule } from './modules/landingPage/landing-page.module';
 import { PrismaService } from './prisma/prisma.service';
 
+
 @Module({
   imports: [ConstructionsModule, AdminModule, AuthModule, LandingPageModule],
   controllers: [],
