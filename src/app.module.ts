@@ -4,6 +4,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LandingPageModule } from './modules/landingPage/landing-page.module';
 import { PrismaService } from './prisma/prisma.service';
+import { LandingPageModule } from './modules/landingPage/landing-page.module';
 
 
 @Module({
