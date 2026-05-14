@@ -1,22 +1,24 @@
 // commitlint.config.js
 module.exports = {
   extends: ['@commitlint/config-conventional'],
+  defaultIgnores: true,
+  ignores: [(message) => message.startsWith('Merge ')],
   rules: {
     // Tipos permitidos
     'type-enum': [
       2,
       'always',
       [
-        'feat',     // nova feature
-        'fix',      // correção de bug
-        'docs',     // documentação
-        'style',    // formatação (sem mudança de lógica)
+        'feat', // nova feature
+        'fix', // correção de bug
+        'docs', // documentação
+        'style', // formatação (sem mudança de lógica)
         'refactor', // refatoração
-        'test',     // testes
-        'chore',    // tarefas de build, configs
-        'perf',     // melhoria de performance
-        'ci',       // mudanças de CI
-        'revert',   // revert de commit
+        'test', // testes
+        'chore', // tarefas de build, configs
+        'perf', // melhoria de performance
+        'ci', // mudanças de CI
+        'revert', // revert de commit
       ],
     ],
     'type-case': [2, 'always', 'lower-case'],

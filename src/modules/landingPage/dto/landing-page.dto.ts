@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, ValidateNested } from 'class-validator';
 import { ArchitectSectionDto } from './architect.dto';
 import { Type } from 'class-transformer';
-import { ImmigrationSectionDto } from './immigration.section.dto';
+import { ImmigrationSectionDto } from './immigration-section.dto';
 import { InstitutionDto } from './institution.dto';
 
 export class LandingPageDto {
