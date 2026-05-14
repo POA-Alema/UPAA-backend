@@ -6,5 +6,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 @Module({
   controllers: [LandingPageController],
   providers: [LandingPageService, PrismaService],
+  exports: [LandingPageService],
 })
 export class LandingPageModule {}
