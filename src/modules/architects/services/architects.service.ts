@@ -9,26 +9,21 @@ export class ArchitectsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async findBySlug(slug: string, lang: string) {
-    this.validateLanguage(lang);
-
-    const selectedLanguage = lang as SupportedLanguage;
+  async findBySlug(slug: string, lang: string = 'pt') {
+    const selectedLanguage = this.validateLanguage(lang);
 
     const architect = await this.prisma.architect.findUnique({
       where: {
         slug,
+      },
+      include: {
+        buildings: true,
       },
     });
 
     if (!architect) {
       throw new NotFoundException('Arquiteto não encontrado.');
     }
-
-    const buildings = await this.prisma.building.findMany({
-      where: {
-        architectId: architect.id,
-      },
-    });
 
     return {
       id: architect.id,
@@ -41,15 +36,19 @@ export class ArchitectsService {
       occupation: this.translateObject(architect.occupation, selectedLanguage),
       about: this.translateObject(architect.about, selectedLanguage),
       characteristics: this.translateObject(architect.characteristics, selectedLanguage),
-      notable_works: buildings.map((building) => building.id),
+      notable_works: architect.buildings.map((building) => building.id),
       updated_at: architect.updatedAt,
     };
   }
 
-  private validateLanguage(lang: string) {
-    if (!this.supportedLanguages.includes(lang as SupportedLanguage)) {
+  private validateLanguage(lang: string): SupportedLanguage {
+    const normalizedLanguage = lang.trim().toLowerCase();
+
+    if (!this.supportedLanguages.includes(normalizedLanguage as SupportedLanguage)) {
       throw new BadRequestException('Idioma inválido. Use pt, en ou de.');
     }
+
+    return normalizedLanguage as SupportedLanguage;
   }
 
   private translateObject(value: unknown, lang: SupportedLanguage): unknown {
