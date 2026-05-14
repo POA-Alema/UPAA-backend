@@ -22,7 +22,7 @@ module.exports = {
       ],
     ],
     'type-case': [2, 'always', 'lower-case'],
-    'subject-case': [2, 'always', 'lower-case'],
+    'subject-case': [0],
     'subject-empty': [2, 'never'],
     'subject-full-stop': [2, 'never', '.'],
     'header-max-length': [2, 'always', 100],
@@ -36,4 +36,3 @@ module.exports = {
 // fix(auth): handle expired jwt token
 // docs: update swagger annotations for orders module
 // chore: bump nestjs to v11
-// Merge branch 'origin/develop' into feature/x
