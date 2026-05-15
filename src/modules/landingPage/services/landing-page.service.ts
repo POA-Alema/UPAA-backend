@@ -1,54 +1,113 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { JsonObject } from '@prisma/client/runtime/binary';
+import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
 
 @Injectable()
 export class LandingPageService {
-  private readonly langs = ['pt', 'en', 'de'];
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor(private prisma: PrismaService) {}
+  /**
+   * Valida a estrutura mínima da immigrationSection.
+   * title.pt e content.pt são obrigatórios quando a seção está presente.
+   */
+  private validateImmigrationSection(
+    section: UpsertLandingPageDto['immigrationSection'],
+  ): void {
+    if (!section) return;
 
-  async findAll(lang: string) {
-    if (!this.langs.includes(lang)) {
-      throw new BadRequestException('Idioma inválido.');
-    }
-
-    const landingPage = await this.prisma.landingPage.findFirst();
-
-    if (!landingPage) {
-      throw new NotFoundException('Dados da landing page não encontrado.');
-    }
-
-    return {
-      id: landingPage.id,
-      mainTitle: this.translate(landingPage.mainTitle, lang),
-      subtitle: this.translate(landingPage.subtitle, lang),
-      architectSection: this.translate(landingPage.architectSection, lang),
-      immigrationSection: this.translate(landingPage.immigrationSection, lang),
-      institutionsSection: this.translate(landingPage.institutionsSection, lang),
-      updated_at: landingPage.updatedAt,
-    };
-  }
-
-  private translate(value: unknown, lang: string): unknown {
-    if (Array.isArray(value)) {
-      return value.map((item) => this.translate(item, lang));
-    }
-
-    if (this.isObject(value)) {
-      if (this.langs.some((key) => key in value)) {
-        return value[lang] ?? value.pt;
-      }
-
-      return Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [key, this.translate(item, lang)]),
+    if (!section.title?.pt) {
+      throw new BadRequestException(
+        'immigrationSection.title.pt é obrigatório',
       );
     }
 
-    return value;
+    if (!section.content?.pt) {
+      throw new BadRequestException(
+        'immigrationSection.content.pt é obrigatório',
+      );
+    }
   }
 
-  private isObject(value: unknown): value is JsonObject {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  /**
+   * Retorna o conteúdo público da landing page (primeiro registro).
+   * Retorna null com segurança se não houver registro.
+   */
+  async findPublic() {
+    const landingPage = await this.prisma.landingPage.findFirst();
+
+    if (!landingPage) {
+      return null;
+    }
+
+    return landingPage;
+  }
+
+  /**
+   * Cria um novo registro de landing page.
+   */
+  async create(dto: UpsertLandingPageDto, updatedById: string) {
+    this.validateImmigrationSection(dto.immigrationSection);
+
+    const data: Prisma.LandingPageUncheckedCreateInput = {
+      ...(dto as Omit<Prisma.LandingPageUncheckedCreateInput, 'updatedById'>),
+      updatedById,
+    };
+
+    return this.prisma.landingPage.create({
+      data,
+    });
+  }
+
+  /**
+   * Atualiza um registro de landing page existente pelo ID.
+   */
+  async update(id: string, dto: UpsertLandingPageDto, updatedById: string) {
+    const existing = await this.prisma.landingPage.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(
+        `Landing page com ID "${id}" não encontrada`,
+      );
+    }
+
+    if (dto.immigrationSection !== undefined) {
+      this.validateImmigrationSection(dto.immigrationSection);
+    }
+
+    const data: Prisma.LandingPageUncheckedUpdateInput = {
+      ...(dto as Prisma.LandingPageUncheckedUpdateInput),
+      updatedById,
+    };
+
+    return this.prisma.landingPage.update({
+      where: { id },
+      data,
+    });
+  }
+
+  /**
+   * Remove um registro de landing page pelo ID.
+   */
+  async remove(id: string) {
+    const existing = await this.prisma.landingPage.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(
+        `Landing page com ID "${id}" não encontrada`,
+      );
+    }
+
+    return this.prisma.landingPage.delete({
+      where: { id },
+    });
   }
 }

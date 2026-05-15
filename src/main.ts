@@ -4,8 +4,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const port = Number(process.env.PORT ?? 3001);
 
-  // Configuração do Swagger
   const config = new DocumentBuilder()
     .setTitle('Uma Porto Alegre Alemã API')
     .setDescription('API para gerenciamento de obras e pontos turísticos')
@@ -17,6 +17,6 @@ async function bootstrap() {
 
   app.enableCors();
 
-  await app.listen(3001);
+  await app.listen(port);
 }
 bootstrap();
