@@ -1,8 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CreateBuildingDto } from '../dto/create-building.dto';
 import { UpdateBuildingDto } from '../dto/update-building.dto';
+
+const SUPPORTED_LANGS = ['pt', 'en', 'de'] as const;
+type Lang = (typeof SUPPORTED_LANGS)[number];
+const DEFAULT_LANG: Lang = 'pt';
+
+function resolveField(i18nField: unknown, fallback: string, lang: Lang): string {
+  if (typeof i18nField === 'string') return i18nField;
+  if (i18nField && typeof i18nField === 'object') {
+    const map = i18nField as Record<string, string>;
+    return map[lang] ?? map[DEFAULT_LANG] ?? fallback;
+  }
+  return fallback;
+}
 
 @Injectable()
 export class BuildingsService {
@@ -91,5 +104,46 @@ export class BuildingsService {
     return this.prisma.building.delete({
       where: { id },
     });
+  }
+
+  async findAllForMap(lang?: string) {
+    if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
+      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
+    }
+
+    const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
+
+    const buildings = await this.prisma.building.findMany({
+      where: { status: 'published' },
+      select: {
+        id: true,
+        slug: true,
+        architectId: true,
+        name: true,
+        location: true,
+        coordinates: true,
+        currentOccupation: true,
+        mediaGallery: true,
+      } as Prisma.BuildingSelect,
+    });
+
+    return buildings.map((building) => ({
+      id: building.id,
+      slug: building.slug,
+      architect_id: building.architectId,
+      name: resolveField(building.name, '', resolvedLang),
+      location: resolveField(building.location, '', resolvedLang),
+      coordinates: building.coordinates as { lat: number; lng: number } | null,
+      current_occupation: building.currentOccupation
+        ? resolveField(building.currentOccupation, '', resolvedLang)
+        : null,
+      media_gallery: (
+        building.mediaGallery as Array<{ url: string; type: string; caption: unknown }>
+      ).map((m) => ({
+        url: m.url,
+        type: m.type,
+        caption: resolveField(m.caption, '', resolvedLang),
+      })),
+    }));
   }
 }
