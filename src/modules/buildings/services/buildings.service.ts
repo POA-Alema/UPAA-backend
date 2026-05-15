@@ -48,7 +48,7 @@ export class BuildingsService {
     } as Record<string, unknown>;
     data['constructor'] = dto.author;
 
-    return this.prisma.building.create({ data: data as Prisma.BuildingUncheckedCreateInput });
+    return this.prisma.building.create({ data: data as Prisma.BuildingCreateInput });
   }
 
   async update(id: string, dto: UpdateBuildingDto) {
@@ -82,7 +82,7 @@ export class BuildingsService {
 
     return this.prisma.building.update({
       where: { id },
-      data: data as Prisma.BuildingUncheckedUpdateInput,
+      data: data as Prisma.BuildingUpdateInput,
     });
   }
 
