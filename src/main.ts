@@ -10,7 +10,7 @@ async function bootstrap() {
     .setTitle('Uma Porto Alegre Alemã API')
     .setDescription('API para gerenciamento de obras e pontos turísticos')
     .setVersion('1.0')
-    .addTag('constructions')
+    .addTag('buildings')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
