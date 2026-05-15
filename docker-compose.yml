@@ -6,7 +6,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: mongodb://mongo:27017/porto_alegre_alema
+      DATABASE_URL: mongodb://mongo:27017/porto_alegre_alema?replicaSet=rs0
       NODE_ENV: production
       PORT: 3001
     depends_on:
@@ -21,15 +21,25 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: porto_alegre_alema
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo_data:/data/db
       - ./docker/mongo-init:/docker-entrypoint-initdb.d
-    healthcheck:  # Adicionar health check
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+    healthcheck:
+      test: |
+        mongosh --eval "
+          try {
+            rs.status().ok
+          } catch(e) {
+            rs.initiate({_id:'rs0', members:[{_id:0, host:'mongo:27017'}]});
+            sleep(2000);
+            rs.status().ok
+          }
+        "
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
-      start_period: 10s
+      start_period: 20s
 
 volumes:
   mongo_data:
