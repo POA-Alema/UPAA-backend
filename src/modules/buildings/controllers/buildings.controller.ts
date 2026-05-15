@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Query } from '@nestjs/common';
 import { BuildingsService } from '../services/buildings.service';
 import { CreateBuildingDto } from '../dto/create-building.dto';
 import { UpdateBuildingDto } from '../dto/update-building.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('buildings')
 @Controller('buildings')
@@ -13,6 +13,13 @@ export class BuildingsController {
   @ApiOperation({ summary: 'Listar todas as edificações' })
   findAll() {
     return this.buildingsService.findAll();
+  }
+
+  @Get('map')
+  @ApiOperation({ summary: 'Listar edificações publicadas para exibição no mapa' })
+  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
+  findAllForMap(@Query('lang') lang?: string) {
+    return this.buildingsService.findAllForMap(lang);
   }
 
   @Get(':id')
@@ -38,4 +45,6 @@ export class BuildingsController {
   remove(@Param('id') id: string) {
     return this.buildingsService.remove(id);
   }
+
+  
 }

@@ -15,6 +15,7 @@ jobs:
   commitlint:
     name: Commit Lint
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:

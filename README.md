@@ -134,3 +134,8 @@ Foi adicionada a configuraÃ§Ã£o [.vscode/launch.json](./.vscode/launch.json)
 Essa configuraÃ§Ã£o executa `npm run start:debug`, expÃµe o inspector do Node na porta `9229` e usa source maps para depurar os arquivos TypeScript.
 
 Se a aplicaÃ§Ã£o jÃ¡ estiver em execuÃ§Ã£o em modo debug, use a configuraÃ§Ã£o `Node: Attach (porta 9229)`.
+
+## Helpers
+
+Validade Typescript compile
+`npx tsc --noEmit 2>&1`
