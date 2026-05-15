@@ -53,9 +53,9 @@ model LandingPage {
   mainTitle Json // {pt, en, de}
   subtitle  Json // {pt, en, de}
 
-  architectSection    Json // { imageURL, title, content, ... }
-  immigrationSection  Json // { imageURL, title, content, ... }
-  institutionsSection Json // { title, institutions: [...] }
+  architectSection    Json  // { imageURL, title, content, ... }
+  immigrationSection  Json? // { imageURL, title, content, ... }
+  institutionsSection Json  // { title, institutions: [...] }
 
   updatedBy   AdminUser @relation(fields: [updatedById], references: [id])
   updatedById String    @db.ObjectId
