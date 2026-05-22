@@ -24,7 +24,6 @@ services:
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongo_data:/data/db
-      - ./docker/mongo-init:/docker-entrypoint-initdb.d
     healthcheck:
       test: |
         mongosh --eval "
@@ -40,6 +39,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+
+  mongo-seed:
+    image: mongo:6
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./docker/mongo-init:/docker-mongo-init
+    command: ["mongosh", "mongodb://mongo:27017/porto_alegre_alema?replicaSet=rs0", "/docker-mongo-init/seed.js"]
+    restart: "no"
 
 volumes:
   mongo_data:

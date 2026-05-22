@@ -36,10 +36,23 @@ backend/
 
 ## Configuração Inicial
 
+
+# 0. Configurar variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto com base no exemplo abaixo:
+
+```env
+# Conexão com o banco de dados MongoDB
+DATABASE_URL="mongodb://url?replicaSet=rs0&directConnection=true"
+```
+
+Pegue a url completa no canal Backend no discord
+
 # 1.  **Instalar dependências**:
-     ```bash
-    npm install
-    ```
+```
+bash npm install
+```
+**PRIORIZE RODAR A APLICAÇÃO NO DOCKER:**
 
 # 2.  **Subir o banco de dados**: 
 
