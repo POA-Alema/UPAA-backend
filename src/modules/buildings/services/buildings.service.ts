@@ -27,17 +27,7 @@ export class BuildingsService {
     });
   }
 
-  async findOne(id: string) {
-    const building = await this.prisma.building.findUnique({
-      where: { id },
-    });
-    if (!building) {
-      throw new NotFoundException(`Edificação com ID ${id} não encontrada`);
-    }
-    return building;
-  }
-
-  create(dto: CreateBuildingDto) {
+ create(dto: CreateBuildingDto) {
     const data = {
       slug: dto.slug,
       qrCodeKey: dto.qrCodeKey,
@@ -59,10 +49,82 @@ export class BuildingsService {
       sources: dto.sources ?? [],
       features: dto.features ?? [],
     } as Record<string, unknown>;
-    data['constructor'] = dto.author;
+    data['constructor'] = dto.author; 
 
     return this.prisma.building.create({ data: data as Prisma.BuildingCreateInput });
   }
+
+  async findOne(slug: string, lang?: string) {
+    if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
+      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
+    }
+
+    const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
+    
+    const building = await this.prisma.building.findFirst({
+      where: { slug },
+      select: {
+        id: true,
+        slug: true,
+        architectId: true,
+        name: true,
+        originalName: true,
+        location: true,
+        coordinates: true,
+        constructionPeriod: true,
+        constructor: true,
+        ornamentsAuthor: true,
+        builtArea: true,
+        currentOccupation: true,
+        restorationAndHeritage: true,
+        description: true,
+        history: true,
+        features: true,
+        mediaGallery: true,
+        sources: true,
+        updatedAt: true,
+      } as Prisma.BuildingSelect,
+    });
+
+    if (!building) {
+      throw new NotFoundException(`Edificação com ID ${slug} não encontrada`);
+    }
+
+    return {
+      id: building.id,
+      slug: building.slug,
+      architect_id: building.architectId,
+      name: resolveField(building.name, '', resolvedLang),
+      original_name: building.originalName
+        ? resolveField(building.originalName, '', resolvedLang)
+        : null,
+      location: resolveField(building.location, '', resolvedLang),
+      coordinates: building.coordinates as { lat: number; lng: number } | null,
+      construction_period: building.constructionPeriod,
+      constructor: building.constructor,
+      ornaments_author: building.ornamentsAuthor,
+      built_area: building.builtArea,
+      current_occupation: building.currentOccupation
+        ? resolveField(building.currentOccupation, '', resolvedLang)
+        : null,
+      restoration_and_heritage: building.restorationAndHeritage
+        ? resolveField(building.restorationAndHeritage, '', resolvedLang)
+        : null,
+      description: resolveField(building.description, '', resolvedLang),
+      history: resolveField(building.history, '', resolvedLang),
+      features: building.features,
+      media_gallery: (
+        building.mediaGallery as Array<{ url: string; type: string; caption: unknown }>
+      ).map((m) => ({
+        url: m.url,
+        type: m.type,
+        caption: resolveField(m.caption, '', resolvedLang),
+      })),
+      sources: building.sources,
+      updated_at: building.updatedAt,
+    };
+  }
+
 
   async update(id: string, dto: UpdateBuildingDto) {
     await this.findOne(id);
