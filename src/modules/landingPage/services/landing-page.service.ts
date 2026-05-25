@@ -14,6 +14,7 @@ export class LandingPageService {
   /**
    * Valida a estrutura mínima da immigrationSection.
    * title.pt e content.pt são obrigatórios quando a seção está presente.
+   * imageAlt é obrigatório quando imageURL está presente (acessibilidade).
    */
   private validateImmigrationSection(
     section: UpsertLandingPageDto['immigrationSection'],
@@ -29,6 +30,13 @@ export class LandingPageService {
     if (!section.content?.pt) {
       throw new BadRequestException(
         'immigrationSection.content.pt é obrigatório',
+      );
+    }
+
+    // Validação de acessibilidade: imageAlt é obrigatório quando imageURL está presente
+    if (section.imageURL && !section.imageAlt) {
+      throw new BadRequestException(
+        'immigrationSection.imageAlt é obrigatório quando imageURL está presente (acessibilidade)',
       );
     }
   }
@@ -53,8 +61,8 @@ export class LandingPageService {
   async create(dto: UpsertLandingPageDto, updatedById: string) {
     this.validateImmigrationSection(dto.immigrationSection);
 
-    const data: Prisma.LandingPageUncheckedCreateInput = {
-      ...(dto as Omit<Prisma.LandingPageUncheckedCreateInput, 'updatedById'>),
+    const data: any = {
+      ...(dto as any),
       updatedById,
     };
 
@@ -81,8 +89,8 @@ export class LandingPageService {
       this.validateImmigrationSection(dto.immigrationSection);
     }
 
-    const data: Prisma.LandingPageUncheckedUpdateInput = {
-      ...(dto as Prisma.LandingPageUncheckedUpdateInput),
+    const data: any = {
+      ...(dto as any),
       updatedById,
     };
 
