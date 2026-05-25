@@ -8,6 +8,7 @@ const MOCK_ADMIN_ID = '000000000000000000000000';
 
 const mockImmigrationSection = {
   imageURL: '/images/home/imigracao-alema-rs.jpg',
+  imageAlt: 'Registros históricos da imigração alemã no Rio Grande do Sul',
   title: {
     pt: 'Imigração alemã',
     en: 'German immigration',
@@ -189,6 +190,114 @@ describe('LandingPageService', () => {
     it('deve lançar NotFoundException se o ID não existir', async () => {
       mockPrismaService.landingPage.findUnique.mockResolvedValue(null);
       await expect(service.remove('id-invalido')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('Acessibilidade - imageAlt validation', () => {
+    it('deve retornar imageAlt quando presente na immigrationSection', async () => {
+      const pageWithAlt = {
+        ...mockLandingPage,
+        immigrationSection: {
+          ...mockImmigrationSection,
+          imageAlt: 'Descrição da imagem de imigração alemã',
+        },
+      };
+      mockPrismaService.landingPage.findFirst.mockResolvedValue(pageWithAlt);
+      const result = await service.findPublic();
+      const section = result!.immigrationSection as typeof mockImmigrationSection & {
+        imageAlt?: string;
+      };
+      expect(section.imageAlt).toBe('Descrição da imagem de imigração alemã');
+    });
+
+    it('deve lançar BadRequestException se imageURL está presente mas imageAlt está ausente', async () => {
+      const invalidSection = {
+        title: { pt: 'Título válido' },
+        content: { pt: 'Conteúdo válido' },
+        imageURL: '/images/test.jpg',
+        imageAlt: '', // imageAlt vazio, deve falhar
+      };
+
+      await expect(
+        service.create({ immigrationSection: invalidSection }, MOCK_ADMIN_ID),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve lançar BadRequestException se imageURL está presente mas imageAlt é null', async () => {
+      const invalidSection = {
+        title: { pt: 'Título válido' },
+        content: { pt: 'Conteúdo válido' },
+        imageURL: '/images/test.jpg',
+        imageAlt: null,
+      };
+
+      await expect(
+        service.create(
+          { immigrationSection: invalidSection as any },
+          MOCK_ADMIN_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve permitir imageURL sem imageAlt apenas se imageURL estiver vazio/null', async () => {
+      mockPrismaService.landingPage.create.mockResolvedValue(mockLandingPage);
+      const validSection = {
+        title: { pt: 'Título válido' },
+        content: { pt: 'Conteúdo válido' },
+        // sem imageURL
+      };
+
+      const result = await service.create(
+        { immigrationSection: validSection },
+        MOCK_ADMIN_ID,
+      );
+      expect(result).toBeDefined();
+    });
+
+    it('deve validar acessibilidade em update() também', async () => {
+      mockPrismaService.landingPage.findUnique.mockResolvedValue(mockLandingPage);
+
+      const invalidUpdate = {
+        immigrationSection: {
+          title: { pt: 'Novo título' },
+          content: { pt: 'Novo conteúdo' },
+          imageURL: '/images/new.jpg',
+          imageAlt: '', // inválido
+        },
+      };
+
+      await expect(
+        service.update('landing-page-id-1', invalidUpdate, MOCK_ADMIN_ID),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve aceitar structure sem quebra semântica - conteúdo multilíngue consistente', async () => {
+      const structuredSection = {
+        title: { pt: 'Título', en: 'Title', de: 'Titel' },
+        content: { pt: 'Conteúdo', en: 'Content', de: 'Inhalt' },
+        imageURL: '/images/test.jpg',
+        imageAlt: 'Imagem de teste',
+      };
+
+      mockPrismaService.landingPage.create.mockResolvedValue({
+        ...mockLandingPage,
+        immigrationSection: structuredSection,
+      });
+
+      const result = await service.create(
+        { immigrationSection: structuredSection },
+        MOCK_ADMIN_ID,
+      );
+
+      const section = result.immigrationSection as typeof structuredSection;
+      // Valida estrutura semântica consistente
+      expect(section.title).toHaveProperty('pt');
+      expect(section.title).toHaveProperty('en');
+      expect(section.title).toHaveProperty('de');
+      expect(section.content).toHaveProperty('pt');
+      expect(section.content).toHaveProperty('en');
+      expect(section.content).toHaveProperty('de');
+      expect(section.imageAlt).toBeDefined();
     });
   });
 });
