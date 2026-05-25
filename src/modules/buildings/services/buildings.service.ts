@@ -56,6 +56,7 @@ export class BuildingsService {
       builtArea: dto.builtArea,
       currentOccupation: dto.currentOccupation ? { pt: dto.currentOccupation } : undefined,
       restorationAndHeritage: dto.restorationAndHeritage ? { pt: dto.restorationAndHeritage } : undefined,
+      heritage: dto.heritage,
       sources: dto.sources ?? [],
       features: dto.features ?? [],
     } as Record<string, unknown>;
@@ -90,6 +91,7 @@ export class BuildingsService {
     if (dto.builtArea !== undefined) data.builtArea = dto.builtArea;
     if (dto.currentOccupation !== undefined) data.currentOccupation = { pt: dto.currentOccupation };
     if (dto.restorationAndHeritage !== undefined) data.restorationAndHeritage = { pt: dto.restorationAndHeritage };
+    if (dto.heritage !== undefined) data.heritage = dto.heritage;
     if (dto.sources !== undefined) data.sources = dto.sources;
     if (dto.features !== undefined) data.features = dto.features;
 

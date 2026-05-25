@@ -7,6 +7,12 @@ import { ArchitectsService } from '../services/architects.service';
 export class ArchitectsController {
     constructor(private readonly architectsService: ArchitectsService) {}
 
+    @Get()
+    @ApiOperation({ summary: 'Listar todos os arquitetos' })
+    findAll() {
+        return this.architectsService.findAll();
+    }
+
     @Get(':slug')
     @ApiOperation({ summary: 'Buscar biografia de um arquiteto por slug' })
     findBySlug(@Param('slug') slug: string, @Query('lang') lang = 'pt') {

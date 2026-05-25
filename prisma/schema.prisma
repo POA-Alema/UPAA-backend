@@ -114,6 +114,7 @@ model Building {
   builtArea              String?
   currentOccupation      Json? // Multilíngue
   restorationAndHeritage Json? // Multilíngue
+  heritage               String?
 
   // Conteúdo Visual e Textual
   description  Json // Multilíngue
