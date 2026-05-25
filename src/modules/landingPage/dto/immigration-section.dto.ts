@@ -4,10 +4,19 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { MultilingualTextDto } from './multilingual-text.dto';
 
 export class ImmigrationSectionDto {
-  @ApiPropertyOptional({ description: 'URL da imagem da seção' })
+  @ApiPropertyOptional({
+    description: 'URL da imagem da seção',
+  })
   @IsOptional()
   @IsString()
   imageURL?: string;
+
+  @ApiPropertyOptional({
+    description: 'Texto alternativo para a imagem (acessibilidade)',
+  })
+  @IsOptional()
+  @IsString()
+  imageAlt?: string;
 
   @ApiPropertyOptional({ description: 'Título multilíngue da seção' })
   @IsOptional()

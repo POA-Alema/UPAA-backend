@@ -8,6 +8,12 @@ export class ArchitectSectionDto {
   @IsString()
   imageURL: string;
 
+  @ApiProperty({
+    description: 'Texto alternativo para a imagem (acessibilidade)',
+  })
+  @IsString()
+  imageAlt: string;
+
   @ApiProperty()
   @IsString()
   imageSubtitle: string;
