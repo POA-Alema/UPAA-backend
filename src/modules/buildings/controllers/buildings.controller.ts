@@ -23,18 +23,19 @@ export class BuildingsController {
   constructor(private readonly buildingsService: BuildingsService,
               private readonly s3Service: S3Service
   ) {}
-  
+
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as edificações' })
-  findAll() {
-    return this.buildingsService.findAll();
+  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
+  findAll(@Query('lang') lang = 'pt') {
+    return this.buildingsService.findAll(lang);
   }
 
   @Get('map')
   @ApiOperation({ summary: 'Listar edificações publicadas para exibição no mapa' })
   @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
-  findAllForMap(@Query('lang') lang?: string) {
+  findAllForMap(@Query('lang') lang = 'pt') {
     return this.buildingsService.findAllForMap(lang);
   }
 
@@ -71,8 +72,6 @@ export class BuildingsController {
       const urls = await Promise.all(
         group.indexes.map(async (index: number) => {
           const file = files[index];
-          // Multer decodifica o filename como latin1; reinterpreta como UTF-8
-          // para que acentos sobrevivam à sanitização da key no S3.
           const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
 
           return this.s3Service.uploadFile(
@@ -82,7 +81,7 @@ export class BuildingsController {
           );
         }),
       );
-      
+
       result.push({
         type: group.type,
         urls,
@@ -103,5 +102,4 @@ export class BuildingsController {
   remove(@Param('id') id: string) {
     return this.buildingsService.remove(id);
   }
-
 }

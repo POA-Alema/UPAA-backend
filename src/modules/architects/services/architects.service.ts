@@ -1,12 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-
-type SupportedLanguage = 'pt' | 'en' | 'de';
+import {
+  SupportedLanguage,
+  isSupportedLanguage,
+  translateLocalizedValue,
+} from '../../../common/i18n';
 
 @Injectable()
 export class ArchitectsService {
-  private readonly supportedLanguages: SupportedLanguage[] = ['pt', 'en', 'de'];
-
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
@@ -67,37 +68,12 @@ export class ArchitectsService {
   }
 
   private validateLanguage(lang: string) {
-    if (!this.supportedLanguages.includes(lang as SupportedLanguage)) {
+    if (!isSupportedLanguage(lang)) {
       throw new BadRequestException('Idioma inválido. Use pt, en ou de.');
     }
   }
 
   private translateObject(value: unknown, lang: SupportedLanguage): unknown {
-    if (Array.isArray(value)) {
-      return value.map((item) => this.translateObject(item, lang));
-    }
-
-    if (this.isObject(value)) {
-      if (this.isMultilingualField(value)) {
-        return value[lang] ?? value.pt;
-      }
-
-      return Object.fromEntries(
-        Object.entries(value).map(([key, fieldValue]) => [
-          key,
-          this.translateObject(fieldValue, lang),
-        ]),
-      );
-    }
-
-    return value;
-  }
-
-  private isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-  }
-
-  private isMultilingualField(value: Record<string, unknown>) {
-    return this.supportedLanguages.some((language) => language in value);
+    return translateLocalizedValue(value, lang);
   }
 }

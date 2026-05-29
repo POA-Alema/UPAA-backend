@@ -6,6 +6,11 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
+import {
+  SupportedLanguage,
+  isSupportedLanguage,
+  translateLocalizedValue,
+} from '../../../common/i18n';
 
 @Injectable()
 export class LandingPageService {
@@ -37,14 +42,15 @@ export class LandingPageService {
    * Retorna o conteúdo público da landing page (primeiro registro).
    * Retorna null com segurança se não houver registro.
    */
-  async findPublic() {
+  async findPublic(lang: string = 'pt') {
+    const resolvedLang = this.validateLanguage(lang);
     const landingPage = await this.prisma.landingPage.findFirst();
 
     if (!landingPage) {
       return null;
     }
 
-    return landingPage;
+    return translateLocalizedValue(landingPage, resolvedLang);
   }
 
   /**
@@ -118,5 +124,13 @@ export class LandingPageService {
     return this.prisma.landingPage.delete({
       where: { id },
     });
+  }
+
+  private validateLanguage(lang: string): SupportedLanguage {
+    if (!isSupportedLanguage(lang)) {
+      throw new BadRequestException('Idioma inválido. Use pt, en ou de.');
+    }
+
+    return lang;
   }
 }

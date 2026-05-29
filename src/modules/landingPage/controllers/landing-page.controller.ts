@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { LandingPageService } from '../services/landing-page.service';
 import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
@@ -31,9 +33,10 @@ export class LandingPageController {
     description:
       'Inclui immigrationSection. Retorna null se não houver ou se estiver inválida.',
   })
+  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
   @ApiResponse({ status: 200, description: 'Conteúdo da landing page' })
-  getLandingPage() {
-    return this.landingPageService.findPublic();
+  getLandingPage(@Query('lang') lang = 'pt') {
+    return this.landingPageService.findPublic(lang);
   }
 
   @Post()

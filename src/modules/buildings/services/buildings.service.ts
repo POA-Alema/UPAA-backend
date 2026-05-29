@@ -4,10 +4,13 @@ import { Prisma } from '@prisma/client';
 import { S3Service } from '../../../Utils/S3.service';
 import { CreateBuildingDto, BuildingImageDto } from '../dto/create-building.dto';
 import { UpdateBuildingDto } from '../dto/update-building.dto';
+import {
+  SupportedLanguage,
+  isSupportedLanguage,
+  translateLocalizedValue,
+} from '../../../common/i18n';
 
-const SUPPORTED_LANGS = ['pt', 'en', 'de'] as const;
-type Lang = (typeof SUPPORTED_LANGS)[number];
-const DEFAULT_LANG: Lang = 'pt';
+const DEFAULT_LANG: SupportedLanguage = 'pt';
 
 const SEED_ADMIN_ID = '000000000000000000000000';
 
@@ -19,7 +22,7 @@ function isObjectId(value: string): boolean {
   return /^[0-9a-fA-F]{24}$/.test(value);
 }
 
-function resolveField(i18nField: unknown, fallback: string, lang: Lang): string {
+function resolveField(i18nField: unknown, fallback: string, lang: SupportedLanguage): string {
   if (typeof i18nField === 'string') return i18nField;
   if (i18nField && typeof i18nField === 'object') {
     const map = i18nField as Record<string, string>;
@@ -64,10 +67,14 @@ export class BuildingsService {
     private s3Service: S3Service,
   ) {}
 
-  findAll() {
-    return this.prisma.building.findMany({
+  async findAll(lang: string = DEFAULT_LANG) {
+    const resolvedLang = this.validateLanguage(lang);
+
+    const buildings = await this.prisma.building.findMany({
       orderBy: { createdAt: 'desc' },
     });
+
+    return buildings.map((building) => translateLocalizedValue(building, resolvedLang));
   }
 
   create(dto: CreateBuildingDto) {
@@ -102,11 +109,7 @@ export class BuildingsService {
   }
 
   async findOne(slugOrId: string, lang?: string) {
-    if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
-      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
-    }
-
-    const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
+    const resolvedLang = lang !== undefined ? this.validateLanguage(lang) : DEFAULT_LANG;
 
     const building = await this.prisma.building.findFirst({
       where: {
@@ -235,6 +238,7 @@ export class BuildingsService {
     if (!building) {
       throw new NotFoundException(`Edificação com ID ${id} não encontrada`);
     }
+
     return building;
   }
 
@@ -255,12 +259,8 @@ export class BuildingsService {
     );
   }
 
-  async findAllForMap(lang?: string) {
-    if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
-      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
-    }
-
-    const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
+  async findAllForMap(lang: string = DEFAULT_LANG) {
+    const resolvedLang = this.validateLanguage(lang);
 
     const buildings = await this.prisma.building.findMany({
       where: { status: 'published' },
@@ -277,15 +277,15 @@ export class BuildingsService {
     return buildings.map((building) => {
       const name = resolveField(building.name, '', resolvedLang);
       const summary = resolveField(building.description, '', resolvedLang);
-      
+
       const rawCoords = building.coordinates as { lat: number; lng: number } | null;
-      const coordinates = rawCoords 
-        ? { latitude: rawCoords.lat, longitude: rawCoords.lng } 
+      const coordinates = rawCoords
+        ? { latitude: rawCoords.lat, longitude: rawCoords.lng }
         : null;
 
       const media = building.mediaGallery as Array<{ url: string; caption?: unknown; alt?: unknown }> | null;
       let coverImage = null;
-      
+
       if (media && media.length > 0) {
         const firstImage = media[0];
         coverImage = {
@@ -314,5 +314,13 @@ export class BuildingsService {
       min_zoom: 12,
       max_zoom: 18,
     };
+  }
+
+  private validateLanguage(lang: string): SupportedLanguage {
+    if (!isSupportedLanguage(lang)) {
+      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
+    }
+
+    return lang;
   }
 }
