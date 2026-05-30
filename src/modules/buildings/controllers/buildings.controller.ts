@@ -22,6 +22,12 @@ export class BuildingsController {
     return this.buildingsService.findAllForMap(lang);
   }
 
+  @Get('map/config')
+  @ApiOperation({ summary: 'Buscar configuração inicial do mapa' })
+  getInitialMapConfig() {
+    return this.buildingsService.getInitialMapConfig();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Consultar uma edificação por ID' })
   findOne(@Param('id') id: string) {
@@ -46,5 +52,4 @@ export class BuildingsController {
     return this.buildingsService.remove(id);
   }
 
-  
 }
