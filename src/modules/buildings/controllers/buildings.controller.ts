@@ -25,15 +25,7 @@ export class BuildingsController {
   @Get('map/config')
   @ApiOperation({ summary: 'Buscar configuração inicial do mapa' })
   getInitialMapConfig() {
-    return {
-      center: {
-        lat: -30.0269,
-        lng: -51.2254,
-      },
-      zoom: 15,
-      min_zoom: 12,
-      max_zoom: 18,
-    };
+    return this.buildingsService.getInitialMapConfig();
   }
 
   @Get(':id')
@@ -60,5 +52,4 @@ export class BuildingsController {
     return this.buildingsService.remove(id);
   }
 
-  
 }
