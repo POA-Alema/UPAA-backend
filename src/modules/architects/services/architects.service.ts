@@ -12,6 +12,7 @@ export class ArchitectsService {
   async findAll() {
     const architects = await this.prisma.architect.findMany({
       orderBy: { createdAt: 'desc' },
+      select: { id: true, slug: true, status: true, name: true },
     });
 
     return architects.map((architect) => {
