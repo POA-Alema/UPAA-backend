@@ -171,7 +171,7 @@ db.buildings.insertMany([
         ],
         mediaGallery: [
             {
-                url: "/images/buildings/margs/fachada-1.jpg",
+                url: "/images/margs/Margs.jpg",
                 type: "fachada",
                 caption: {
                     pt: "Fachada principal do MARGS",
@@ -180,7 +180,7 @@ db.buildings.insertMany([
                 }
             },
             {
-                url: "/images/buildings/margs/externa-1.jpg",
+                url: "/images/margs/fotos_externas.jpg",
                 type: "externa",
                 caption: {
                     pt: "Vista externa do edifício na Praça da Alfândega",
@@ -277,7 +277,7 @@ db.buildings.insertMany([
         ],
         mediaGallery: [
             {
-                url: "/images/buildings/memorial/fachada-1.jpg",
+                url: "/images/Memorial RS.jpg",
                 type: "fachada",
                 caption: {
                     pt: "Fachada do Memorial do Rio Grande do Sul",
