@@ -57,10 +57,10 @@ export class LandingPageService {
     delete createFields.id;
     delete createFields._id;
 
-    const data: Prisma.LandingPageUncheckedCreateInput = {
+    const data = {
       ...createFields,
       updatedById,
-    };
+    } as Prisma.LandingPageUncheckedCreateInput;
 
     return this.prisma.landingPage.create({
       data,
