@@ -81,8 +81,13 @@ export class LandingPageService {
       this.validateImmigrationSection(dto.immigrationSection);
     }
 
+    const updateFields = { ...dto } as Record<string, unknown>;
+    delete updateFields.id;
+    delete updateFields._id;
+    delete updateFields.updatedAt;
+
     const data: Prisma.LandingPageUncheckedUpdateInput = {
-      ...(dto as Prisma.LandingPageUncheckedUpdateInput),
+      ...updateFields,
       updatedById,
     };
 
