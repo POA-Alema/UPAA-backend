@@ -53,8 +53,12 @@ export class LandingPageService {
   async create(dto: UpsertLandingPageDto, updatedById: string) {
     this.validateImmigrationSection(dto.immigrationSection);
 
+    const createFields = { ...dto } as Record<string, unknown>;
+    delete createFields.id;
+    delete createFields._id;
+
     const data: Prisma.LandingPageUncheckedCreateInput = {
-      ...(dto as Omit<Prisma.LandingPageUncheckedCreateInput, 'updatedById'>),
+      ...createFields,
       updatedById,
     };
 
