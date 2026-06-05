@@ -1,9 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { CtaDto } from './cta.dto';
 
 class InstitutionItemDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiProperty()
   @IsString()
   title: string;
@@ -16,6 +27,11 @@ class InstitutionItemDto {
   @ValidateNested()
   @Type(() => CtaDto)
   CTA: CtaDto;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  imageURL?: string;
 
   @ApiProperty()
   @IsNumber()
