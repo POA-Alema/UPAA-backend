@@ -332,11 +332,11 @@ db.landing_page.insertOne({
         subtitle: {
             pt: "Um nome central na paisagem de Porto Alegre",
             en: "A central name in Porto Alegre's landscape",
-            de: "Ein zentraler Name in der Stadtlandschaft von Porto Alegre"
+            de: "Ein centraler Name in der Stadtlandschaft von Porto Alegre"
         },
         content: {
             pt: "A trajetória de Theodor Wiederspahn ajuda a entender parte importante da formação visual e simbólica do Centro Histórico de Porto Alegre.",
-            en: "The trajectory of Theodor Wiederspahn helps explain an important part of the visual and symbolic formation of Porto Alegre's historic center.",
+            en: "A trajectory of Theodor Wiederspahn helps explain an important part of the visual and symbolic formation of Porto Alegre's historic center.",
             de: "Die Laufbahn von Theodor Wiederspahn hilft, einen wichtigen Teil der visuellen und symbolischen Prägung des historischen Zentrums von Porto Alegre zu verstehen."
         },
         CTA: {
@@ -351,29 +351,29 @@ db.landing_page.insertOne({
         order: 1
     },
     immigrationSection: {
-    imageURL: "/images/home/imigracao-alema-rs.jpg",
-    imgSubtitle: {
-        pt: "Registros da imigração alemã no Rio Grande do Sul",
-        en: "Records of German immigration in Rio Grande do Sul",
-        de: "Aufzeichnungen der deutschen Einwanderung in Rio Grande do Sul"
+        imageURL: "/images/home/imigracao-alema-rs.jpg",
+        imgSubtitle: {
+            pt: "Registros da imigração alemã no Rio Grande do Sul",
+            en: "Records of German immigration in Rio Grande do Sul",
+            de: "Aufzeichnungen der deutschen Einwanderung in Rio Grande do Sul"
+        },
+        title: {
+            pt: "Imigração alemã",
+            en: "German immigration",
+            de: "Deutsche Einwanderung"
+        },
+        subtitle: {
+            pt: "Das colônias ao Centro Histórico",
+            en: "From colonies to the Historic Center",
+            de: "Von den Kolonien ins historische Zentrum"
+        },
+        content: {
+            pt: "A partir de 1824, imigrantes alemães chegaram ao Rio Grande do Sul e estabeleceram colônias que influenciaram profundamente a cultura, a economia e a arquitetura da região. Em Porto Alegre, essa presença se materializou em edificações do Centro Histórico que até hoje marcam a paisagem urbana da cidade.",
+            en: "From 1824 onwards, German immigrants arrived in Rio Grande do Sul and established colonies that deeply influenced the culture, economy and architecture of the region. In Porto Alegre, this presence materialized in buildings in the Historic Center that still mark the city's urban landscape today.",
+            de: "Ab 1824 kamen deutsche Einwanderer nach Rio Grande do Sul und gründeten Kolonien, die Kultur, Wirtschaft und Architektur der Region nachhaltig prägten. In Porto Alegre materialisierte sich diese Präsenz in Gebäuden des historischen Zentrums, die das Stadtbild até hoje marcam o painel urbano da cidade."
+        },
+        order: 2
     },
-    title: {
-        pt: "Imigração alemã",
-        en: "German immigration",
-        de: "Deutsche Einwanderung"
-    },
-    subtitle: {
-        pt: "Das colônias ao Centro Histórico",
-        en: "From colonies to the Historic Center",
-        de: "Von den Kolonien ins historische Zentrum"
-    },
-    content: {
-        pt: "A partir de 1824, imigrantes alemães chegaram ao Rio Grande do Sul e estabeleceram colônias que influenciaram profundamente a cultura, a economia e a arquitetura da região. Em Porto Alegre, essa presença se materializou em edificações do Centro Histórico que até hoje marcam a paisagem urbana da cidade.",
-        en: "From 1824 onwards, German immigrants arrived in Rio Grande do Sul and established colonies that deeply influenced the culture, economy and architecture of the region. In Porto Alegre, this presence materialized in buildings in the Historic Center that still mark the city's urban landscape today.",
-        de: "Ab 1824 kamen deutsche Einwanderer nach Rio Grande do Sul und gründeten Kolonien, die Kultur, Wirtschaft und Architektur der Region nachhaltig prägten. In Porto Alegre materialisierte sich diese Präsenz in Gebäuden des historischen Zentrums, die das Stadtbild bis heute prägen."
-    },
-    order: 2
-},
     institutionsSection: {
         title: {
             pt: "Instituições em destaque",
@@ -382,6 +382,7 @@ db.landing_page.insertOne({
         },
         institutions: [
             {
+                id: "inst-margs",
                 title: {
                     pt: "MARGS",
                     en: "MARGS",
@@ -390,7 +391,7 @@ db.landing_page.insertOne({
                 description: {
                     pt: "Museu instalado em edifício histórico associado a Theodor Wiederspahn.",
                     en: "Museum housed in a historic building associated with Theodor Wiederspahn.",
-                    de: "Museum in einem historischen Gebäude, das mit Theodor Wiederspahn verbunden ist."
+                    de: "Museum in einem historischen Gebäude, das mit Theodor Wiederspahn verknüpft ist."
                 },
                 CTA: {
                     label: {
@@ -401,9 +402,11 @@ db.landing_page.insertOne({
                     target: "/buildings/margs-museu-de-arte-do-rio-grande-do-sul",
                     icon: "building"
                 },
+                imageURL: "/images/Margs.jpg",
                 order: 1
             },
             {
+                id: "inst-memorial",
                 title: {
                     pt: "Memorial do RS",
                     en: "Memorial do RS",
@@ -423,6 +426,7 @@ db.landing_page.insertOne({
                     target: "/buildings/memorial-do-rio-grande-do-sul",
                     icon: "landmark"
                 },
+                imageURL: "/images/Memorial RS.jpg",
                 order: 2
             }
         ]
