@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main, develop]
 
-
 defaults:
   run:
     shell: bash
@@ -38,7 +37,7 @@ jobs:
         run: npx commitlint --last --verbose
 
       - name: Validate PR commit messages
-        if: github.event_name == 'pull_request'    
+        if: github.event_name == 'pull_request'
         run: npx commitlint --from ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --to HEAD --verbose
 
   lint:
@@ -52,7 +51,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx eslint .
-  
+
   quality:
     name: Quality Checks
     runs-on: ubuntu-latest
@@ -83,7 +82,7 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-            
+
       # ── Prisma ──
       - name: Generate Prisma client
         run: npx prisma generate
@@ -108,7 +107,7 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 7
-      
+
   mirror:
     name: Mirror to GitLab
     runs-on: ubuntu-latest
@@ -128,7 +127,7 @@ jobs:
 
       - name: Push para GitLab
         run: |
-          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@tools.ages.pucrs.br/uma-porto-alegre-alem/backend.git
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@tools.ages.pucrs.br/uma-porto-alegre-alema/backend.git
           CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
           git push gitlab "HEAD:${CURRENT_BRANCH}" --force
           git push gitlab --tags --force

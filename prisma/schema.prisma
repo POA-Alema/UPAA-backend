@@ -1,4 +1,3 @@
-// Configuração do Cliente e Banco de Dados
 generator client {
   provider = "prisma-client-js"
 }
@@ -26,6 +25,112 @@ enum ImageType {
 }
 
 // ==========================================
+// EMBEDDED TYPES
+// ==========================================
+
+type I18nText {
+  pt String
+  en String
+  de String
+}
+
+type PersonName {
+  first String
+  last  String
+  full  String
+}
+
+type MediaAltText {
+  pt String
+  en String
+  de String
+}
+
+type ArchitectMedia {
+  portrait_url String
+  alt_text     MediaAltText
+}
+
+type DateParts {
+  day   Int
+  month Int
+  year  Int
+  iso   String
+}
+
+type Place {
+  city    String
+  country String
+}
+
+type LifeEvent {
+  date  DateParts
+  place Place
+}
+
+type ArchitectCharacteristics {
+  style      I18nText
+  influences I18nText
+  legacy     I18nText
+}
+
+type Coordinates {
+  lat Float
+  lng Float
+}
+
+type BuildingFeature {
+  title       I18nText
+  description I18nText
+  icon_url    String
+}
+
+type MediaGalleryItem {
+  url     String
+  type    ImageType
+  caption I18nText
+}
+
+type LandingCTA {
+  label  I18nText
+  target String
+  icon   String
+}
+
+type ArchitectSection {
+  imageURL      String
+  imageSubtitle I18nText
+  title         I18nText
+  subtitle      I18nText
+  content       I18nText
+  CTA           LandingCTA
+  order         Int
+}
+
+type ImmigrationSection {
+  imageURL    String
+  imgSubtitle I18nText
+  title       I18nText
+  subtitle    I18nText
+  content     I18nText
+  order       Int
+}
+
+type InstitutionItem {
+  id          String
+  title       I18nText
+  description I18nText
+  CTA         LandingCTA
+  imageURL    String
+  order       Int
+}
+
+type InstitutionsSection {
+  title        I18nText
+  institutions InstitutionItem[]
+}
+
+// ==========================================
 // MODELS
 // ==========================================
 
@@ -34,28 +139,29 @@ model AdminUser {
   name         String
   email        String   @unique
   passwordHash String
-  role         String // Ex: admin, editor
+  role         String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relações para auditoria
   updatedLandingPages LandingPage[]
-  createdArchitects   Architect[]   @relation("ArchitectCreatedBy")
-  updatedArchitects   Architect[]   @relation("ArchitectUpdatedBy")
-  createdBuildings    Building[]    @relation("BuildingCreatedBy")
-  updatedBuildings    Building[]    @relation("BuildingUpdatedBy")
+
+  createdArchitects Architect[] @relation("ArchitectCreatedBy")
+  updatedArchitects Architect[] @relation("ArchitectUpdatedBy")
+
+  createdBuildings Building[] @relation("BuildingCreatedBy")
+  updatedBuildings Building[] @relation("BuildingUpdatedBy")
 
   @@map("admin_users")
 }
 
 model LandingPage {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  mainTitle Json // {pt, en, de}
-  subtitle  Json // {pt, en, de}
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  mainTitle I18nText
+  subtitle  I18nText
 
-  architectSection    Json  // { imageURL, title, content, ... }
-  immigrationSection  Json? // { imageURL, title, content, ... }
-  institutionsSection Json  // { title, institutions: [...] }
+  architectSection    ArchitectSection
+  immigrationSection  ImmigrationSection?
+  institutionsSection InstitutionsSection
 
   updatedBy   AdminUser @relation(fields: [updatedById], references: [id])
   updatedById String    @db.ObjectId
@@ -69,25 +175,25 @@ model Architect {
   slug   String    @unique
   status PubStatus @default(draft)
 
-  name            Json // { first, last, full }
-  media           Json // { portrait_url, alt_text: {pt,en,de} }
-  birth           Json // { date: {...}, place: {...} }
-  death           Json? // { date, place }
+  name            PersonName
+  media           ArchitectMedia
+  birth           LifeEvent
+  death           LifeEvent?
   citizenship     String
   occupation      String
-  about           Json // { pt, en, de }
-  characteristics Json // { style, influences, legacy }
+  about           I18nText
+  characteristics ArchitectCharacteristics
 
-  // Relação com Edifícios
   buildings Building[] @relation("ArchitectToBuilding")
 
-  // Auditoria
   createdBy   AdminUser @relation("ArchitectCreatedBy", fields: [createdById], references: [id])
   createdById String    @db.ObjectId
+
   updatedBy   AdminUser @relation("ArchitectUpdatedBy", fields: [updatedById], references: [id])
   updatedById String    @db.ObjectId
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("architects")
 }
@@ -98,38 +204,35 @@ model Building {
   status    PubStatus @default(draft)
   qrCodeKey String    @unique
 
-  // Relacionamento com Arquiteto
   architect   Architect @relation("ArchitectToBuilding", fields: [architectId], references: [id])
   architectId String    @db.ObjectId
 
-  name         Json // Nome atual (multilíngue)
-  originalName Json? // Nome histórico (multilíngue)
-  location     Json // Endereço (multilíngue)
-  coordinates  Json // { lat, lng }
+  name         I18nText
+  originalName I18nText?
+  location     I18nText
+  coordinates  Coordinates
 
-  // Ficha Técnica
   constructionPeriod     String
   constructor            String?
   ornamentsAuthor        String?
   builtArea              String?
-  currentOccupation      Json? // Multilíngue
-  restorationAndHeritage Json? // Multilíngue
-  heritage               String?
+  currentOccupation      I18nText?
+  restorationAndHeritage I18nText?
 
-  // Conteúdo Visual e Textual
-  description  Json // Multilíngue
-  history      Json // Multilíngue
-  features     Json[] // Array de objetos { title, description, icon_url }
-  mediaGallery Json[] // Array de objetos { url, type: ImageType, caption }
-  sources      String[] // Lista de bibliografia
+  description  I18nText
+  history      I18nText
+  features     BuildingFeature[]
+  mediaGallery MediaGalleryItem[]
+  sources      String[]
 
-  // Auditoria
   createdBy   AdminUser @relation("BuildingCreatedBy", fields: [createdById], references: [id])
   createdById String    @db.ObjectId
+
   updatedBy   AdminUser @relation("BuildingUpdatedBy", fields: [updatedById], references: [id])
   updatedById String    @db.ObjectId
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("buildings")
 }

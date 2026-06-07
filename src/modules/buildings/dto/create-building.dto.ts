@@ -96,11 +96,6 @@ export class CreateBuildingDto {
   @IsOptional()
   restorationAndHeritage?: string;
 
-  @ApiPropertyOptional({ description: 'Tombamento / proteção patrimonial' })
-  @IsString()
-  @IsOptional()
-  heritage?: string;
-
   @ApiPropertyOptional({ type: [String], description: 'Lista de fontes / bibliografia' })
   @IsArray()
   @IsString({ each: true })
