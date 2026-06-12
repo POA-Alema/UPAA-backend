@@ -10,6 +10,26 @@ class CoordinatesDto {
   lng: number;
 }
 
+
+export class BuildingImageDto {
+  @ApiProperty({ description: 'URL pública da imagem (ex: retornada pelo upload no S3)' })
+  @IsString()
+  url: string;
+
+  @ApiProperty({
+    description: 'Categoria da imagem',
+    enum: ['planta_baixa', 'fachada', 'externa', 'interna'],
+  })
+  @IsString()
+  @IsOptional()
+  type?: string;
+
+  @ApiPropertyOptional({ description: 'Legenda da imagem' })
+  @IsString()
+  @IsOptional()
+  caption?: string;
+}
+
 export class CreateBuildingDto {
   @ApiProperty({ description: 'Título da edificação' })
   @IsString()
@@ -25,13 +45,14 @@ export class CreateBuildingDto {
   author?: string;
 
   @ApiPropertyOptional({
-    type: [String],
-    description: 'Lista de URLs das imagens da edificação',
+    type: [BuildingImageDto],
+    description: 'Imagens da edificação, categorizadas por tipo (planta_baixa, fachada, externa, interna)',
   })
   @IsArray()
-  @IsString({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => BuildingImageDto)
   @IsOptional()
-  images?: string[];
+  images?: BuildingImageDto[];
 
   @ApiProperty({ description: 'Slug único (URL-friendly)' })
   @IsString()
@@ -63,13 +84,19 @@ export class CreateBuildingDto {
   @IsString()
   history: string;
 
-  @ApiProperty({ description: 'ID do admin que criou (ObjectId)' })
+  @ApiPropertyOptional({
+    description: 'ID do admin que criou (ObjectId). Se omitido, usa o admin padrão (seed).',
+  })
   @IsString()
-  createdById: string;
+  @IsOptional()
+  createdById?: string;
 
-  @ApiProperty({ description: 'ID do admin que atualizou (ObjectId)' })
+  @ApiPropertyOptional({
+    description: 'ID do admin que atualizou (ObjectId). Se omitido, usa o admin padrão (seed).',
+  })
   @IsString()
-  updatedById: string;
+  @IsOptional()
+  updatedById?: string;
 
   @ApiPropertyOptional({ description: 'Nome histórico / original da edificação' })
   @IsString()
@@ -81,7 +108,7 @@ export class CreateBuildingDto {
   @IsOptional()
   ornamentsAuthor?: string;
 
-  @ApiPropertyOptional({ description: 'Área construída' })
+  @ApiPropertyOptional({ description: 'Ýrea construída' })
   @IsString()
   @IsOptional()
   builtArea?: string;

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ArchitectsModule } from './modules/architects/architects.module';
@@ -8,7 +9,15 @@ import { HealthModule } from './modules/health/health.module';
 import { PrismaService } from './prisma/prisma.service';
 
 @Module({
-  imports: [AdminModule, AuthModule, ArchitectsModule, LandingPageModule, BuildingsModule, HealthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AdminModule,
+    AuthModule,
+    ArchitectsModule,
+    LandingPageModule,
+    BuildingsModule,
+    HealthModule,
+  ],
   controllers: [],
   providers: [PrismaService],
 })

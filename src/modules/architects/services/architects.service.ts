@@ -9,6 +9,26 @@ export class ArchitectsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  async findAll() {
+    const architects = await this.prisma.architect.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return architects.map((architect) => {
+      const name = architect.name as
+        | { first?: string; last?: string; full?: string }
+        | null;
+      const fullName =
+        name?.full ?? [name?.first, name?.last].filter(Boolean).join(' ');
+
+      return {
+        id: architect.id,
+        slug: architect.slug,
+        name: fullName,
+      };
+    });
+  }
+
   async findBySlug(slug: string, lang: string) {
     this.validateLanguage(lang);
 

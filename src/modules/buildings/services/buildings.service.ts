@@ -1,12 +1,23 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CreateBuildingDto } from '../dto/create-building.dto';
+import { S3Service } from '../../../Utils/S3.service';
+import { CreateBuildingDto, BuildingImageDto } from '../dto/create-building.dto';
 import { UpdateBuildingDto } from '../dto/update-building.dto';
 
 const SUPPORTED_LANGS = ['pt', 'en', 'de'] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
 const DEFAULT_LANG: Lang = 'pt';
+
+const SEED_ADMIN_ID = '000000000000000000000000';
+
+const IMAGE_TYPES = ['planta_baixa', 'fachada', 'externa', 'interna'] as const;
+type ImageTypeValue = (typeof IMAGE_TYPES)[number];
+const DEFAULT_IMAGE_TYPE: ImageTypeValue = 'externa';
+
+function isObjectId(value: string): boolean {
+  return /^[0-9a-fA-F]{24}$/.test(value);
+}
 
 function resolveField(i18nField: unknown, fallback: string, lang: Lang): string {
   if (typeof i18nField === 'string') return i18nField;
@@ -17,9 +28,41 @@ function resolveField(i18nField: unknown, fallback: string, lang: Lang): string 
   return fallback;
 }
 
+function toI18n(value: unknown): { pt: string; en: string; de: string } {
+  if (value && typeof value === 'object') {
+    const map = value as Record<string, string>;
+    const base = map.pt ?? map.en ?? map.de ?? '';
+    return { pt: map.pt ?? base, en: map.en ?? base, de: map.de ?? base };
+  }
+  const text = typeof value === 'string' ? value : '';
+  return { pt: text, en: text, de: text };
+}
+
+function normalizeImageType(type: unknown): ImageTypeValue {
+  return typeof type === 'string' && (IMAGE_TYPES as readonly string[]).includes(type)
+    ? (type as ImageTypeValue)
+    : DEFAULT_IMAGE_TYPE;
+}
+
+function mapImages(images: Array<BuildingImageDto | string> | undefined) {
+  return (images ?? []).map((image) => {
+    if (typeof image === 'string') {
+      return { url: image, type: DEFAULT_IMAGE_TYPE, caption: toI18n('') };
+    }
+    return {
+      url: image.url,
+      type: normalizeImageType(image.type),
+      caption: toI18n(image.caption),
+    };
+  });
+}
+
 @Injectable()
 export class BuildingsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private s3Service: S3Service,
+  ) {}
 
   findAll() {
     return this.prisma.building.findMany({
@@ -27,42 +70,48 @@ export class BuildingsService {
     });
   }
 
- create(dto: CreateBuildingDto) {
+  create(dto: CreateBuildingDto) {
     const data = {
       slug: dto.slug,
       qrCodeKey: dto.qrCodeKey,
+      status: 'published',
       architectId: dto.architectId,
-      name: { pt: dto.title },
-      description: { pt: dto.description },
-      location: { pt: dto.location },
+      name: toI18n(dto.title),
+      description: toI18n(dto.description),
+      location: toI18n(dto.location),
       coordinates: dto.coordinates,
       constructionPeriod: dto.constructionPeriod,
-      history: { pt: dto.history },
-      createdById: dto.createdById,
-      updatedById: dto.updatedById,
-      mediaGallery: dto.images?.map((url) => ({ url, type: 'externa', caption: '' })) ?? [],
-      originalName: dto.originalName ? { pt: dto.originalName } : undefined,
+      history: toI18n(dto.history),
+      createdById: dto.createdById ?? SEED_ADMIN_ID,
+      updatedById: dto.updatedById ?? SEED_ADMIN_ID,
+      mediaGallery: mapImages(dto.images),
+      originalName: dto.originalName ? toI18n(dto.originalName) : undefined,
       ornamentsAuthor: dto.ornamentsAuthor,
       builtArea: dto.builtArea,
-      currentOccupation: dto.currentOccupation ? { pt: dto.currentOccupation } : undefined,
-      restorationAndHeritage: dto.restorationAndHeritage ? { pt: dto.restorationAndHeritage } : undefined,
+      currentOccupation: dto.currentOccupation ? toI18n(dto.currentOccupation) : undefined,
+      restorationAndHeritage: dto.restorationAndHeritage
+        ? toI18n(dto.restorationAndHeritage)
+        : undefined,
       sources: dto.sources ?? [],
       features: dto.features ?? [],
     } as Record<string, unknown>;
-    data['constructor'] = dto.author; 
+    // DB column is "constructor"; the DTO exposes it as "author".
+    data['constructor'] = dto.author;
 
     return this.prisma.building.create({ data: data as Prisma.BuildingCreateInput });
   }
 
-  async findOne(slug: string, lang?: string) {
+  async findOne(slugOrId: string, lang?: string) {
     if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
       throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
     }
 
     const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
-    
+
     const building = await this.prisma.building.findFirst({
-      where: { slug },
+      where: {
+        OR: [{ slug: slugOrId }, ...(isObjectId(slugOrId) ? [{ id: slugOrId }] : [])],
+      },
       select: {
         id: true,
         slug: true,
@@ -87,7 +136,7 @@ export class BuildingsService {
     });
 
     if (!building) {
-      throw new NotFoundException(`Edificação com ID ${slug} não encontrada`);
+      throw new NotFoundException(`Edificação com ID ${slugOrId} não encontrada`);
     }
 
     return {
@@ -125,47 +174,85 @@ export class BuildingsService {
     };
   }
 
-
   async update(id: string, dto: UpdateBuildingDto) {
-    await this.findOne(id);
+    const existing = await this.ensureExists(id);
 
     const data: Record<string, unknown> = {};
+    const nextGallery = dto.images !== undefined ? mapImages(dto.images) : undefined;
 
-    if (dto.title !== undefined) data.name = { pt: dto.title };
-    if (dto.description !== undefined) data.description = { pt: dto.description };
+    if (dto.title !== undefined) data.name = toI18n(dto.title);
+    if (dto.description !== undefined) data.description = toI18n(dto.description);
     if (dto.author !== undefined) data['constructor'] = dto.author;
-    if (dto.images !== undefined) {
-      data.mediaGallery = dto.images.map((url) => ({ url, type: 'externa', caption: '' }));
-    }
+    if (nextGallery !== undefined) data.mediaGallery = nextGallery;
 
     if (dto.slug !== undefined) data.slug = dto.slug;
     if (dto.qrCodeKey !== undefined) data.qrCodeKey = dto.qrCodeKey;
     if (dto.architectId !== undefined) data.architectId = dto.architectId;
-    if (dto.location !== undefined) data.location = { pt: dto.location };
+    if (dto.location !== undefined) data.location = toI18n(dto.location);
     if (dto.coordinates !== undefined) data.coordinates = dto.coordinates;
     if (dto.constructionPeriod !== undefined) data.constructionPeriod = dto.constructionPeriod;
-    if (dto.history !== undefined) data.history = { pt: dto.history };
+    if (dto.history !== undefined) data.history = toI18n(dto.history);
     if (dto.createdById !== undefined) data.createdById = dto.createdById;
     if (dto.updatedById !== undefined) data.updatedById = dto.updatedById;
-    if (dto.originalName !== undefined) data.originalName = { pt: dto.originalName };
+    if (dto.originalName !== undefined) data.originalName = toI18n(dto.originalName);
     if (dto.ornamentsAuthor !== undefined) data.ornamentsAuthor = dto.ornamentsAuthor;
     if (dto.builtArea !== undefined) data.builtArea = dto.builtArea;
-    if (dto.currentOccupation !== undefined) data.currentOccupation = { pt: dto.currentOccupation };
-    if (dto.restorationAndHeritage !== undefined) data.restorationAndHeritage = { pt: dto.restorationAndHeritage };
+    if (dto.currentOccupation !== undefined) data.currentOccupation = toI18n(dto.currentOccupation);
+    if (dto.restorationAndHeritage !== undefined)
+      data.restorationAndHeritage = toI18n(dto.restorationAndHeritage);
     if (dto.sources !== undefined) data.sources = dto.sources;
     if (dto.features !== undefined) data.features = dto.features;
 
-    return this.prisma.building.update({
+    const updated = await this.prisma.building.update({
       where: { id },
       data: data as Prisma.BuildingUpdateInput,
     });
+
+    if (nextGallery !== undefined) {
+      const nextUrls = new Set(nextGallery.map((image) => image.url));
+      const removedUrls = this.galleryUrls(existing.mediaGallery).filter(
+        (url) => !nextUrls.has(url),
+      );
+      await this.deleteUploadsFromS3(removedUrls);
+    }
+
+    return updated;
   }
 
   async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.building.delete({
+    const existing = await this.ensureExists(id);
+    const deleted = await this.prisma.building.delete({
       where: { id },
     });
+
+    await this.deleteUploadsFromS3(this.galleryUrls(existing.mediaGallery));
+
+    return deleted;
+  }
+
+  private async ensureExists(id: string) {
+    const building = await this.prisma.building.findUnique({ where: { id } });
+    if (!building) {
+      throw new NotFoundException(`Edificação com ID ${id} não encontrada`);
+    }
+    return building;
+  }
+
+  private galleryUrls(mediaGallery: unknown): string[] {
+    if (!Array.isArray(mediaGallery)) return [];
+    return mediaGallery
+      .map((item) =>
+        item && typeof item === 'object' ? (item as { url?: unknown }).url : undefined,
+      )
+      .filter((url): url is string => typeof url === 'string' && url.length > 0);
+  }
+
+  // Best-effort: o S3Service só remove objetos do prefixo de uploads do bucket
+  // e trata/loga falhas individualmente, sem propagar erro ao chamador.
+  private async deleteUploadsFromS3(urls: string[]) {
+    await Promise.all(
+      [...new Set(urls)].map((url) => this.s3Service.deleteUploadedFileByUrl(url)),
+    );
   }
 
   async findAllForMap(lang?: string) {
