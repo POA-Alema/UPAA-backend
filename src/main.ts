@@ -12,6 +12,7 @@ async function bootstrap() {
     .setDescription('API para gerenciamento de obras e pontos turísticos')
     .setVersion('1.0')
     .addTag('buildings')
+    .addTag('architects')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

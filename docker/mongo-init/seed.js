@@ -1,5 +1,9 @@
 use("porto_alegre_alema");
 
+// As imagens da pasta UPAA-frontend/public/images foram enviadas para este bucket S3
+// (mesmo nome/caminho). As URLs abaixo apontam para esses objetos públicos.
+const S3 = "https://liderpoaalema.s3.us-east-2.amazonaws.com";
+
 const adminId = ObjectId("000000000000000000000000");
 const architectId = new ObjectId();
 const margsId = new ObjectId();
@@ -30,7 +34,7 @@ db.architects.insertOne({
         full: "Theodor Wiederspahn"
     },
     media: {
-        portrait_url: "/images/architects/theodor-wiederspahn.jpg",
+        portrait_url: `${S3}/images/theodor.png`,
         alt_text: {
             pt: "Retrato de Theodor Wiederspahn",
             en: "Portrait of Theodor Wiederspahn",
@@ -141,6 +145,8 @@ db.buildings.insertMany([
             en: "Built in 1913, the building was designed by Theo Wiederspahn and later became the home of MARGS, establishing itself as an artistic and heritage landmark in the historic center.",
             de: "Das 1913 errichtete Gebäude wurde von Theo Wiederspahn entworfen und wurde später Sitz des MARGS. Es gilt heute als künstlerisches und denkmalpflegerisches Wahrzeichen des historischen Zentrums."
         },
+        // Os icon_url relativos (/icons/*.svg) são servidos pelo frontend a partir
+        // de UPAA-frontend/public/icons/.
         features: [
             {
                 title: {
@@ -171,21 +177,111 @@ db.buildings.insertMany([
         ],
         mediaGallery: [
             {
-                url: "/images/buildings/margs/fachada-1.jpg",
-                type: "fachada",
+                url: `${S3}/images/margs/planta_baixa.jpg`,
+                type: "planta_baixa",
                 caption: {
-                    pt: "Fachada principal do MARGS",
-                    en: "Main façade of MARGS",
-                    de: "Hauptfassade des MARGS"
+                    pt: "Planta baixa do segundo pavimento",
+                    en: "Floor plan of the second floor",
+                    de: "Grundriss des zweiten Obergeschosses"
                 }
             },
             {
-                url: "/images/buildings/margs/externa-1.jpg",
+                url: `${S3}/images/margs/fachadas.jpg`,
+                type: "fachada",
+                caption: {
+                    pt: "Detalhe da fachada com colunas e ornamentos",
+                    en: "Façade detail with columns and ornaments",
+                    de: "Fassadendetail mit Säulen und Ornamenten"
+                }
+            },
+            {
+                url: `${S3}/images/margs/fotos_externas.jpg`,
                 type: "externa",
                 caption: {
                     pt: "Vista externa do edifício na Praça da Alfândega",
                     en: "Exterior view of the building at Praça da Alfândega",
                     de: "Außenansicht des Gebäudes an der Praça da Alfândega"
+                }
+            },
+            {
+                url: `${S3}/images/Margs_2.jpg`,
+                type: "externa",
+                caption: {
+                    pt: "Vista externa do MARGS",
+                    en: "Exterior view of MARGS",
+                    de: "Außenansicht des MARGS"
+                }
+            },
+            {
+                url: `${S3}/images/margs/Margs.jpg`,
+                type: "externa",
+                caption: {
+                    pt: "Edifício do MARGS",
+                    en: "MARGS building",
+                    de: "MARGS-Gebäude"
+                }
+            },
+            {
+                url: `${S3}/images/margs/fotos_internas.jpg`,
+                type: "interna",
+                caption: {
+                    pt: "Saguão interno com abóbada",
+                    en: "Internal hall with vaulted ceiling",
+                    de: "Innenhalle mit Gewölbedecke"
+                }
+            },
+            {
+                url: `${S3}/images/margs/escadaria_interna.jpeg`,
+                type: "interna",
+                caption: {
+                    pt: "Escadaria interna",
+                    en: "Internal staircase",
+                    de: "Innentreppe"
+                }
+            },
+            {
+                url: `${S3}/images/margs/superior.jpeg`,
+                type: "interna",
+                caption: {
+                    pt: "Vista do pavimento superior",
+                    en: "View of the upper floor",
+                    de: "Blick auf das Obergeschoss"
+                }
+            },
+            {
+                url: `${S3}/images/margs/teto.jpeg`,
+                type: "interna",
+                caption: {
+                    pt: "Detalhe do teto ornamentado",
+                    en: "Detail of the ornate ceiling",
+                    de: "Detail der verzierten Decke"
+                }
+            },
+            {
+                url: `${S3}/images/margs/pintura.jpeg`,
+                type: "interna",
+                caption: {
+                    pt: "Pintura decorativa",
+                    en: "Decorative painting",
+                    de: "Dekorative Malerei"
+                }
+            },
+            {
+                url: `${S3}/images/margs/esculturas.jpeg`,
+                type: "interna",
+                caption: {
+                    pt: "Esculturas e ornamentos internos",
+                    en: "Internal sculptures and ornaments",
+                    de: "Innenskulpturen und Ornamente"
+                }
+            },
+            {
+                url: `${S3}/images/margs/esculturas2.jpeg`,
+                type: "interna",
+                caption: {
+                    pt: "Detalhe de esculturas internas",
+                    en: "Detail of internal sculptures",
+                    de: "Detail der Innenskulpturen"
                 }
             }
         ],
@@ -277,21 +373,13 @@ db.buildings.insertMany([
         ],
         mediaGallery: [
             {
-                url: "/images/buildings/memorial/fachada-1.jpg",
+                // O nome do arquivo tem espaço, codificado como %20 na URL do objeto S3.
+                url: `${S3}/images/Memorial%20RS.jpg`,
                 type: "fachada",
                 caption: {
                     pt: "Fachada do Memorial do Rio Grande do Sul",
                     en: "Façade of the Rio Grande do Sul Memorial",
                     de: "Fassade des Memorial von Rio Grande do Sul"
-                }
-            },
-            {
-                url: "/images/buildings/memorial/externa-1.jpg",
-                type: "externa",
-                caption: {
-                    pt: "Vista externa do prédio histórico",
-                    en: "Exterior view of the historic building",
-                    de: "Außenansicht des historischen Gebäudes"
                 }
             }
         ],
@@ -318,7 +406,7 @@ db.landing_page.insertOne({
         de: "Architektur, Erinnerung und Stadt aus dem Vermächtnis von Theodor Wiederspahn."
     },
     architectSection: {
-        imageURL: "/images/architects/theodor-wiederspahn.jpg",
+        imageURL: `${S3}/images/theodor.png`,
         imageSubtitle: {
             pt: "Theodor Wiederspahn",
             en: "Theodor Wiederspahn",
@@ -351,7 +439,7 @@ db.landing_page.insertOne({
         order: 1
     },
     immigrationSection: {
-        imageURL: "/images/home/imigracao-alema-rs.jpg",
+        imageURL: `${S3}/images/home/imigracao-alema-rs.jpg`,
         imgSubtitle: {
             pt: "Registros da imigração alemã no Rio Grande do Sul",
             en: "Records of German immigration in Rio Grande do Sul",
@@ -402,7 +490,7 @@ db.landing_page.insertOne({
                     target: "/buildings/margs-museu-de-arte-do-rio-grande-do-sul",
                     icon: "building"
                 },
-                imageURL: "/images/Margs.jpg",
+                imageURL: `${S3}/images/Margs_2.jpg`,
                 order: 1
             },
             {
@@ -426,7 +514,7 @@ db.landing_page.insertOne({
                     target: "/buildings/memorial-do-rio-grande-do-sul",
                     icon: "landmark"
                 },
-                imageURL: "/images/Memorial RS.jpg",
+                imageURL: `${S3}/images/Memorial%20RS.jpg`,
                 order: 2
             }
         ]

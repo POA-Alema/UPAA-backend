@@ -9,6 +9,12 @@ services:
       DATABASE_URL: mongodb://mongo:27017/porto_alegre_alema?replicaSet=rs0
       NODE_ENV: production
       PORT: 3001
+      # Credenciais do S3 interpoladas do .env desta pasta (gitignored) —
+      # sem elas o upload de imagens responde 500 (SDK não resolve region).
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
     depends_on:
       mongo:
         condition: service_healthy  # Aguarda o MongoDB ficar saudável
