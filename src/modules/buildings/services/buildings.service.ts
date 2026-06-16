@@ -267,33 +267,44 @@ export class BuildingsService {
       select: {
         id: true,
         slug: true,
-        architectId: true,
         name: true,
-        location: true,
         coordinates: true,
-        currentOccupation: true,
+        description: true,
         mediaGallery: true,
       } as Prisma.BuildingSelect,
     });
 
-    return buildings.map((building) => ({
-      id: building.id,
-      slug: building.slug,
-      architect_id: building.architectId,
-      name: resolveField(building.name, '', resolvedLang),
-      location: resolveField(building.location, '', resolvedLang),
-      coordinates: building.coordinates as { lat: number; lng: number } | null,
-      current_occupation: building.currentOccupation
-        ? resolveField(building.currentOccupation, '', resolvedLang)
-        : null,
-      media_gallery: (
-        building.mediaGallery as Array<{ url: string; type: string; caption: unknown }>
-      ).map((m) => ({
-        url: m.url,
-        type: m.type,
-        caption: resolveField(m.caption, '', resolvedLang),
-      })),
-    }));
+    return buildings.map((building) => {
+      const name = resolveField(building.name, '', resolvedLang);
+      const summary = resolveField(building.description, '', resolvedLang);
+      
+      const rawCoords = building.coordinates as { lat: number; lng: number } | null;
+      const coordinates = rawCoords 
+        ? { latitude: rawCoords.lat, longitude: rawCoords.lng } 
+        : null;
+
+      const media = building.mediaGallery as Array<{ url: string; caption?: unknown; alt?: unknown }> | null;
+      let coverImage = null;
+      
+      if (media && media.length > 0) {
+        const firstImage = media[0];
+        coverImage = {
+          url: firstImage.url,
+          alt: resolveField(firstImage.alt, `Fachada de ${name}`, resolvedLang),
+          caption: resolveField(firstImage.caption, '', resolvedLang),
+        };
+      }
+
+      return {
+        id: building.id,
+        slug: building.slug,
+        name,
+        coordinates,
+        coverImage,
+        summary,
+        detailPath: `/edificacoes/${building.slug}`,
+      };
+    });
   }
 
   getInitialMapConfig() {
