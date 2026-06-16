@@ -263,7 +263,7 @@ export class BuildingsService {
     const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
 
     const buildings = await this.prisma.building.findMany({
-      where: { status: 'published' }, // Apenas publicadas (AC cumprido)
+      where: { status: 'published' },
       select: {
         id: true,
         slug: true,
@@ -290,7 +290,7 @@ export class BuildingsService {
         const firstImage = media[0];
         coverImage = {
           url: firstImage.url,
-          alt: firstImage.alt ? resolveField(firstImage.alt, `Fachada de ${name}`, resolvedLang) : `Fachada de ${name}`,
+          alt: resolveField(firstImage.alt, `Fachada de ${name}`, resolvedLang),
           caption: resolveField(firstImage.caption, '', resolvedLang),
         };
       }

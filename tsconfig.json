@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
-    "types": ["node", "multer", "jest"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -20,7 +19,8 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "allowJs": false,
-    "checkJs": false
+    "checkJs": false,
+    "types": ["node", "jest"]
   },
   "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
 }
