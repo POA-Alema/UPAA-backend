@@ -1,11 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
+import { validateLanguage, translateLocalizedValue } from '../../../common/i18n';
 
 @Injectable()
 export class LandingPageService {
@@ -37,14 +34,15 @@ export class LandingPageService {
    * Retorna o conteúdo público da landing page (primeiro registro).
    * Retorna null com segurança se não houver registro.
    */
-  async findPublic() {
+  async findPublic(lang: string = 'pt') {
+    const resolvedLang = validateLanguage(lang);
     const landingPage = await this.prisma.landingPage.findFirst();
 
     if (!landingPage) {
       return null;
     }
 
-    return landingPage;
+    return translateLocalizedValue(landingPage, resolvedLang);
   }
 
   /**
@@ -119,4 +117,5 @@ export class LandingPageService {
       where: { id },
     });
   }
+
 }

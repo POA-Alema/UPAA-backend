@@ -1,13 +1,17 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { S3Service } from '../../../Utils/S3.service';
 import { CreateBuildingDto, BuildingImageDto } from '../dto/create-building.dto';
 import { UpdateBuildingDto } from '../dto/update-building.dto';
+import {
+  SupportedLanguage,
+  SUPPORTED_LANGS,
+  validateLanguage,
+  translateLocalizedValue,
+} from '../../../common/i18n';
 
-const SUPPORTED_LANGS = ['pt', 'en', 'de'] as const;
-type Lang = (typeof SUPPORTED_LANGS)[number];
-const DEFAULT_LANG: Lang = 'pt';
+const DEFAULT_LANG: SupportedLanguage = 'pt';
 
 const SEED_ADMIN_ID = '000000000000000000000000';
 
@@ -19,11 +23,11 @@ function isObjectId(value: string): boolean {
   return /^[0-9a-fA-F]{24}$/.test(value);
 }
 
-function resolveField(i18nField: unknown, fallback: string, lang: Lang): string {
+function resolveField(i18nField: unknown, fallback: string, lang: SupportedLanguage): string {
   if (typeof i18nField === 'string') return i18nField;
   if (i18nField && typeof i18nField === 'object') {
     const map = i18nField as Record<string, string>;
-    return map[lang] ?? map[DEFAULT_LANG] ?? fallback;
+    return map[lang] ?? SUPPORTED_LANGS.map((l) => map[l]).find((v) => v !== undefined) ?? fallback;
   }
   return fallback;
 }
@@ -64,10 +68,37 @@ export class BuildingsService {
     private s3Service: S3Service,
   ) {}
 
-  findAll() {
-    return this.prisma.building.findMany({
+  async findAll(lang: string = DEFAULT_LANG) {
+    const resolvedLang = validateLanguage(lang);
+
+    const buildings = await this.prisma.building.findMany({
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        status: true,
+        architectId: true,
+        name: true,
+        originalName: true,
+        location: true,
+        coordinates: true,
+        constructionPeriod: true,
+        constructor: true,
+        ornamentsAuthor: true,
+        builtArea: true,
+        currentOccupation: true,
+        restorationAndHeritage: true,
+        description: true,
+        history: true,
+        features: true,
+        mediaGallery: true,
+        sources: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
+
+    return buildings.map((building) => translateLocalizedValue(building, resolvedLang));
   }
 
   create(dto: CreateBuildingDto) {
@@ -102,11 +133,7 @@ export class BuildingsService {
   }
 
   async findOne(slugOrId: string, lang?: string) {
-    if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
-      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
-    }
-
-    const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
+    const resolvedLang = validateLanguage(lang ?? DEFAULT_LANG);
 
     const building = await this.prisma.building.findFirst({
       where: {
@@ -132,7 +159,7 @@ export class BuildingsService {
         mediaGallery: true,
         sources: true,
         updatedAt: true,
-      } as Prisma.BuildingSelect,
+      },
     });
 
     if (!building) {
@@ -206,6 +233,13 @@ export class BuildingsService {
     const updated = await this.prisma.building.update({
       where: { id },
       data: data as Prisma.BuildingUpdateInput,
+      select: {
+        id: true, slug: true, status: true, architectId: true, name: true,
+        originalName: true, location: true, coordinates: true, constructionPeriod: true,
+        constructor: true, ornamentsAuthor: true, builtArea: true, currentOccupation: true,
+        restorationAndHeritage: true, description: true, history: true, features: true,
+        mediaGallery: true, sources: true, createdAt: true, updatedAt: true,
+      },
     });
 
     if (nextGallery !== undefined) {
@@ -223,6 +257,7 @@ export class BuildingsService {
     const existing = await this.ensureExists(id);
     const deleted = await this.prisma.building.delete({
       where: { id },
+      select: { id: true, slug: true, constructor: false },
     });
 
     await this.deleteUploadsFromS3(this.galleryUrls(existing.mediaGallery));
@@ -235,6 +270,7 @@ export class BuildingsService {
     if (!building) {
       throw new NotFoundException(`Edificação com ID ${id} não encontrada`);
     }
+
     return building;
   }
 
@@ -255,12 +291,8 @@ export class BuildingsService {
     );
   }
 
-  async findAllForMap(lang?: string) {
-    if (lang !== undefined && !SUPPORTED_LANGS.includes(lang as Lang)) {
-      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
-    }
-
-    const resolvedLang = (lang as Lang) ?? DEFAULT_LANG;
+  async findAllForMap(lang: string = DEFAULT_LANG) {
+    const resolvedLang = validateLanguage(lang);
 
     const buildings = await this.prisma.building.findMany({
       where: { status: 'published' },
@@ -271,21 +303,22 @@ export class BuildingsService {
         coordinates: true,
         description: true,
         mediaGallery: true,
-      } as Prisma.BuildingSelect,
+        constructor: false,
+      },
     });
 
     return buildings.map((building) => {
       const name = resolveField(building.name, '', resolvedLang);
       const summary = resolveField(building.description, '', resolvedLang);
-      
+
       const rawCoords = building.coordinates as { lat: number; lng: number } | null;
-      const coordinates = rawCoords 
-        ? { latitude: rawCoords.lat, longitude: rawCoords.lng } 
+      const coordinates = rawCoords
+        ? { latitude: rawCoords.lat, longitude: rawCoords.lng }
         : null;
 
       const media = building.mediaGallery as Array<{ url: string; caption?: unknown; alt?: unknown }> | null;
       let coverImage = null;
-      
+
       if (media && media.length > 0) {
         const firstImage = media[0];
         coverImage = {
@@ -315,4 +348,5 @@ export class BuildingsService {
       max_zoom: 18,
     };
   }
+
 }

@@ -23,18 +23,19 @@ export class BuildingsController {
   constructor(private readonly buildingsService: BuildingsService,
               private readonly s3Service: S3Service
   ) {}
-  
+
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as edificações' })
-  findAll() {
-    return this.buildingsService.findAll();
+  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
+  findAll(@Query('lang') lang = 'pt') {
+    return this.buildingsService.findAll(lang);
   }
 
   @Get('map')
   @ApiOperation({ summary: 'Listar edificações publicadas para exibição no mapa' })
   @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
-  findAllForMap(@Query('lang') lang?: string) {
+  findAllForMap(@Query('lang') lang = 'pt') {
     return this.buildingsService.findAllForMap(lang);
   }
 
@@ -82,7 +83,7 @@ export class BuildingsController {
           );
         }),
       );
-      
+
       result.push({
         type: group.type,
         urls,
@@ -103,5 +104,4 @@ export class BuildingsController {
   remove(@Param('id') id: string) {
     return this.buildingsService.remove(id);
   }
-
 }

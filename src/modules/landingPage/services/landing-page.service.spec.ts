@@ -57,24 +57,42 @@ describe('LandingPageService', () => {
   });
 
   describe('findPublic()', () => {
-    it('deve retornar título e conteúdo da immigrationSection', async () => {
+    it('deve retornar apenas o idioma solicitado', async () => {
       mockPrismaService.landingPage.findFirst.mockResolvedValue(mockLandingPage);
-      const result = await service.findPublic();
+      const result = await service.findPublic('en');
       const section = result!.immigrationSection as typeof mockImmigrationSection;
-      expect(section.title.pt).toBe('Imigração alemã');
-      expect(section.content.pt).toContain('1824');
+      expect(section.title).toBe('German immigration');
+      expect(section.content).toContain('German immigrants');
+      expect(section).not.toHaveProperty('title.pt');
+    });
+
+    it('deve usar fallback para pt quando a tradução solicitada não existir', async () => {
+      const pageWithoutEnglish = {
+        ...mockLandingPage,
+        immigrationSection: {
+          ...mockImmigrationSection,
+          title: { pt: 'Imigração alemã' },
+        },
+      };
+
+      mockPrismaService.landingPage.findFirst.mockResolvedValue(pageWithoutEnglish);
+      const result = await service.findPublic('de');
+      const section = result!.immigrationSection as typeof mockImmigrationSection;
+
+      expect(section.title).toBe('Imigração alemã');
+      expect(section.content).toBe('Ab 1824 kamen deutsche Einwanderer nach Rio Grande do Sul.');
     });
 
     it('deve retornar imageURL quando presente na immigrationSection', async () => {
       mockPrismaService.landingPage.findFirst.mockResolvedValue(mockLandingPage);
-      const result = await service.findPublic();
+      const result = await service.findPublic('pt');
       const section = result!.immigrationSection as typeof mockImmigrationSection;
       expect(section.imageURL).toBe('/images/home/imigracao-alema-rs.jpg');
     });
 
     it('deve retornar dados mockados vindos do banco (seed)', async () => {
       mockPrismaService.landingPage.findFirst.mockResolvedValue(mockLandingPage);
-      const result = await service.findPublic();
+      const result = await service.findPublic('pt');
       expect(mockPrismaService.landingPage.findFirst).toHaveBeenCalledTimes(1);
       expect(result!.id).toBe('landing-page-id-1');
     });
@@ -82,27 +100,28 @@ describe('LandingPageService', () => {
     it('não deve retornar erro quando a immigrationSection estiver ausente', async () => {
       const pageWithoutSection = { ...mockLandingPage, immigrationSection: null };
       mockPrismaService.landingPage.findFirst.mockResolvedValue(pageWithoutSection);
-      const result = await service.findPublic();
+      const result = await service.findPublic('pt');
       expect(result).not.toBeNull();
       expect(result!.immigrationSection).toBeNull();
     });
 
     it('não deve retornar erro quando não houver registro de landing page', async () => {
       mockPrismaService.landingPage.findFirst.mockResolvedValue(null);
-      const result = await service.findPublic();
+      const result = await service.findPublic('pt');
       expect(result).toBeNull();
     });
 
-    it('deve retornar estrutura multilíngue consistente (pt, en, de)', async () => {
+    it('deve lançar erro para lang inválido', async () => {
+      await expect(service.findPublic('es')).rejects.toThrow(BadRequestException);
+      expect(mockPrismaService.landingPage.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('não deve expor objeto multilíngue quando lang é informado', async () => {
       mockPrismaService.landingPage.findFirst.mockResolvedValue(mockLandingPage);
-      const result = await service.findPublic();
+      const result = await service.findPublic('de');
       const section = result!.immigrationSection as typeof mockImmigrationSection;
-      expect(section.title.pt).toBeDefined();
-      expect(section.title.en).toBeDefined();
-      expect(section.title.de).toBeDefined();
-      expect(section.content.pt).toBeDefined();
-      expect(section.content.en).toBeDefined();
-      expect(section.content.de).toBeDefined();
+      expect(typeof section.title).toBe('string');
+      expect(typeof section.content).toBe('string');
     });
   });
 

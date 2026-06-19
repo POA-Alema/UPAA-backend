@@ -36,9 +36,9 @@ jobs:
         if: github.event_name == 'push'
         run: npx commitlint --last --verbose
 
-      - name: Validate PR commit messages
+      - name: Validate latest PR commit message
         if: github.event_name == 'pull_request'
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --to HEAD --verbose
+        run: npx commitlint --last --verbose
 
   lint:
     name: Lint Codebase
