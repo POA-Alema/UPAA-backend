@@ -72,6 +72,8 @@ export class BuildingsController {
       const urls = await Promise.all(
         group.indexes.map(async (index: number) => {
           const file = files[index];
+          // Multer decodifica o filename como latin1; reinterpreta como UTF-8
+          // para que acentos sobrevivam à sanitização da key no S3.
           const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
 
           return this.s3Service.uploadFile(

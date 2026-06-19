@@ -72,7 +72,6 @@ export class BuildingsService {
     const resolvedLang = validateLanguage(lang);
 
     const buildings = await this.prisma.building.findMany({
-      where: { status: 'published' },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -96,7 +95,7 @@ export class BuildingsService {
         sources: true,
         createdAt: true,
         updatedAt: true,
-      } as Prisma.BuildingSelect,
+      },
     });
 
     return buildings.map((building) => translateLocalizedValue(building, resolvedLang));
@@ -134,7 +133,7 @@ export class BuildingsService {
   }
 
   async findOne(slugOrId: string, lang?: string) {
-    const resolvedLang = lang !== undefined ? validateLanguage(lang) : DEFAULT_LANG;
+    const resolvedLang = validateLanguage(lang ?? DEFAULT_LANG);
 
     const building = await this.prisma.building.findFirst({
       where: {
@@ -160,7 +159,7 @@ export class BuildingsService {
         mediaGallery: true,
         sources: true,
         updatedAt: true,
-      } as Prisma.BuildingSelect,
+      },
     });
 
     if (!building) {
@@ -240,7 +239,7 @@ export class BuildingsService {
         constructor: true, ornamentsAuthor: true, builtArea: true, currentOccupation: true,
         restorationAndHeritage: true, description: true, history: true, features: true,
         mediaGallery: true, sources: true, createdAt: true, updatedAt: true,
-      } as Prisma.BuildingSelect,
+      },
     });
 
     if (nextGallery !== undefined) {
@@ -258,7 +257,7 @@ export class BuildingsService {
     const existing = await this.ensureExists(id);
     const deleted = await this.prisma.building.delete({
       where: { id },
-      select: { id: true, slug: true } as Prisma.BuildingSelect,
+      select: { id: true, slug: true, constructor: false },
     });
 
     await this.deleteUploadsFromS3(this.galleryUrls(existing.mediaGallery));
@@ -304,7 +303,8 @@ export class BuildingsService {
         coordinates: true,
         description: true,
         mediaGallery: true,
-      } as Prisma.BuildingSelect,
+        constructor: false,
+      },
     });
 
     return buildings.map((building) => {
