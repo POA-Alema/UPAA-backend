@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { S3Service } from '../../../Utils/S3.service';
@@ -6,7 +6,8 @@ import { CreateBuildingDto, BuildingImageDto } from '../dto/create-building.dto'
 import { UpdateBuildingDto } from '../dto/update-building.dto';
 import {
   SupportedLanguage,
-  isSupportedLanguage,
+  SUPPORTED_LANGS,
+  validateLanguage,
   translateLocalizedValue,
 } from '../../../common/i18n';
 
@@ -26,7 +27,7 @@ function resolveField(i18nField: unknown, fallback: string, lang: SupportedLangu
   if (typeof i18nField === 'string') return i18nField;
   if (i18nField && typeof i18nField === 'object') {
     const map = i18nField as Record<string, string>;
-    return map[lang] ?? map[DEFAULT_LANG] ?? fallback;
+    return map[lang] ?? SUPPORTED_LANGS.map((l) => map[l]).find((v) => v !== undefined) ?? fallback;
   }
   return fallback;
 }
@@ -68,10 +69,34 @@ export class BuildingsService {
   ) {}
 
   async findAll(lang: string = DEFAULT_LANG) {
-    const resolvedLang = this.validateLanguage(lang);
+    const resolvedLang = validateLanguage(lang);
 
     const buildings = await this.prisma.building.findMany({
+      where: { status: 'published' },
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        status: true,
+        architectId: true,
+        name: true,
+        originalName: true,
+        location: true,
+        coordinates: true,
+        constructionPeriod: true,
+        constructor: true,
+        ornamentsAuthor: true,
+        builtArea: true,
+        currentOccupation: true,
+        restorationAndHeritage: true,
+        description: true,
+        history: true,
+        features: true,
+        mediaGallery: true,
+        sources: true,
+        createdAt: true,
+        updatedAt: true,
+      } as Prisma.BuildingSelect,
     });
 
     return buildings.map((building) => translateLocalizedValue(building, resolvedLang));
@@ -109,7 +134,7 @@ export class BuildingsService {
   }
 
   async findOne(slugOrId: string, lang?: string) {
-    const resolvedLang = lang !== undefined ? this.validateLanguage(lang) : DEFAULT_LANG;
+    const resolvedLang = lang !== undefined ? validateLanguage(lang) : DEFAULT_LANG;
 
     const building = await this.prisma.building.findFirst({
       where: {
@@ -209,6 +234,13 @@ export class BuildingsService {
     const updated = await this.prisma.building.update({
       where: { id },
       data: data as Prisma.BuildingUpdateInput,
+      select: {
+        id: true, slug: true, status: true, architectId: true, name: true,
+        originalName: true, location: true, coordinates: true, constructionPeriod: true,
+        constructor: true, ornamentsAuthor: true, builtArea: true, currentOccupation: true,
+        restorationAndHeritage: true, description: true, history: true, features: true,
+        mediaGallery: true, sources: true, createdAt: true, updatedAt: true,
+      } as Prisma.BuildingSelect,
     });
 
     if (nextGallery !== undefined) {
@@ -226,6 +258,7 @@ export class BuildingsService {
     const existing = await this.ensureExists(id);
     const deleted = await this.prisma.building.delete({
       where: { id },
+      select: { id: true, slug: true } as Prisma.BuildingSelect,
     });
 
     await this.deleteUploadsFromS3(this.galleryUrls(existing.mediaGallery));
@@ -260,7 +293,7 @@ export class BuildingsService {
   }
 
   async findAllForMap(lang: string = DEFAULT_LANG) {
-    const resolvedLang = this.validateLanguage(lang);
+    const resolvedLang = validateLanguage(lang);
 
     const buildings = await this.prisma.building.findMany({
       where: { status: 'published' },
@@ -316,11 +349,4 @@ export class BuildingsService {
     };
   }
 
-  private validateLanguage(lang: string): SupportedLanguage {
-    if (!isSupportedLanguage(lang)) {
-      throw new BadRequestException(`Idioma inválido: "${lang}". Use pt, en ou de.`);
-    }
-
-    return lang;
-  }
 }

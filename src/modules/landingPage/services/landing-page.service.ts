@@ -1,16 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
-import {
-  SupportedLanguage,
-  isSupportedLanguage,
-  translateLocalizedValue,
-} from '../../../common/i18n';
+import { validateLanguage, translateLocalizedValue } from '../../../common/i18n';
 
 @Injectable()
 export class LandingPageService {
@@ -43,7 +35,7 @@ export class LandingPageService {
    * Retorna null com segurança se não houver registro.
    */
   async findPublic(lang: string = 'pt') {
-    const resolvedLang = this.validateLanguage(lang);
+    const resolvedLang = validateLanguage(lang);
     const landingPage = await this.prisma.landingPage.findFirst();
 
     if (!landingPage) {
@@ -126,11 +118,4 @@ export class LandingPageService {
     });
   }
 
-  private validateLanguage(lang: string): SupportedLanguage {
-    if (!isSupportedLanguage(lang)) {
-      throw new BadRequestException('Idioma inválido. Use pt, en ou de.');
-    }
-
-    return lang;
-  }
 }

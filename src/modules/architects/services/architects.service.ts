@@ -1,8 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import {
-  SupportedLanguage,
-  isSupportedLanguage,
+  validateLanguage,
   translateLocalizedValue,
 } from '../../../common/i18n';
 
@@ -31,9 +30,7 @@ export class ArchitectsService {
   }
 
   async findBySlug(slug: string, lang: string) {
-    this.validateLanguage(lang);
-
-    const selectedLanguage = lang as SupportedLanguage;
+    const selectedLanguage = validateLanguage(lang);
 
     const architect = await this.prisma.architect.findUnique({
       where: {
@@ -54,26 +51,16 @@ export class ArchitectsService {
     return {
       id: architect.id,
       slug: architect.slug,
-      name: this.translateObject(architect.name, selectedLanguage),
-      media: this.translateObject(architect.media, selectedLanguage),
-      birth: this.translateObject(architect.birth, selectedLanguage),
-      death: architect.death ? this.translateObject(architect.death, selectedLanguage) : null,
-      citizenship: this.translateObject(architect.citizenship, selectedLanguage),
-      occupation: this.translateObject(architect.occupation, selectedLanguage),
-      about: this.translateObject(architect.about, selectedLanguage),
-      characteristics: this.translateObject(architect.characteristics, selectedLanguage),
+      name: translateLocalizedValue(architect.name, selectedLanguage),
+      media: translateLocalizedValue(architect.media, selectedLanguage),
+      birth: translateLocalizedValue(architect.birth, selectedLanguage),
+      death: architect.death ? translateLocalizedValue(architect.death, selectedLanguage) : null,
+      citizenship: translateLocalizedValue(architect.citizenship, selectedLanguage),
+      occupation: translateLocalizedValue(architect.occupation, selectedLanguage),
+      about: translateLocalizedValue(architect.about, selectedLanguage),
+      characteristics: translateLocalizedValue(architect.characteristics, selectedLanguage),
       notable_works: buildings.map((building) => building.id),
       updated_at: architect.updatedAt,
     };
-  }
-
-  private validateLanguage(lang: string) {
-    if (!isSupportedLanguage(lang)) {
-      throw new BadRequestException('Idioma inválido. Use pt, en ou de.');
-    }
-  }
-
-  private translateObject(value: unknown, lang: SupportedLanguage): unknown {
-    return translateLocalizedValue(value, lang);
   }
 }
