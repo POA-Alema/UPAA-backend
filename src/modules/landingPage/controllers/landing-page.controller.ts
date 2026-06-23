@@ -9,8 +9,10 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiTags,
   ApiOperation,
   ApiResponse,
@@ -19,6 +21,10 @@ import {
 } from '@nestjs/swagger';
 import { LandingPageService } from '../services/landing-page.service';
 import { UpsertLandingPageDto } from '../dto/upsert-landing-page.dto';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { AdminRole } from '../../auth/constants/admin-role';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 
 const SEED_ADMIN_ID = '000000000000000000000000';
 
@@ -40,6 +46,9 @@ export class LandingPageController {
   }
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @ApiOperation({ summary: 'Cria um registro de landing page' })
   @ApiResponse({ status: 201, description: 'Landing page criada' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -48,6 +57,9 @@ export class LandingPageController {
   }
 
   @Put(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @ApiOperation({ summary: 'Atualiza um registro de landing page pelo ID' })
   @ApiParam({ name: 'id', description: 'ID do registro da landing page' })
   @ApiResponse({ status: 200, description: 'Landing page atualizada' })
@@ -58,6 +70,9 @@ export class LandingPageController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove um registro de landing page pelo ID' })
   @ApiParam({ name: 'id', description: 'ID do registro da landing page' })
