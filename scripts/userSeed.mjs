@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import { Buffer } from 'node:buffer';
 import { scrypt as nodeScrypt } from 'node:crypto';
+import process from 'node:process';
 import { promisify } from 'node:util';
 
 const scrypt = promisify(nodeScrypt);
@@ -17,6 +19,10 @@ const CONFIG = {
 };
 
 const VALID_ROLES = ['ADMIN', 'CONTENT_MANAGER'];
+
+function writeLine(message) {
+  process.stdout.write(`${message}\n`);
+}
 
 function maskDatabaseUrl(databaseUrl) {
   return databaseUrl.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, '//$1:***@');
@@ -113,15 +119,17 @@ async function main() {
 
   try {
     const result = await upsertUser(prisma);
-    console.log(`Banco: ${maskDatabaseUrl(CONFIG.databaseUrl)}`);
-    console.log(`Usuário ${result.action === 'created' ? 'criado' : 'atualizado'} com sucesso:`);
-    console.log(JSON.stringify(result.user, null, 2));
+    writeLine(`Banco: ${maskDatabaseUrl(CONFIG.databaseUrl)}`);
+    writeLine(`Usuário ${result.action === 'created' ? 'criado' : 'atualizado'} com sucesso:`);
+    writeLine(JSON.stringify(result.user, null, 2));
   } finally {
     await prisma.$disconnect();
   }
 }
 
 main().catch((error) => {
-  console.error(`Erro ao rodar seed:user: ${error instanceof Error ? error.message : String(error)}`);
+  process.stderr.write(
+    `Erro ao rodar seed:user: ${error instanceof Error ? error.message : String(error)}\n`,
+  );
   process.exitCode = 1;
 });
