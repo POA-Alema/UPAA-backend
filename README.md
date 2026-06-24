@@ -78,7 +78,7 @@ docker compose logs mongo
 docker compose exec mongo mongosh
 ```
 
-O seed com dados iniciais será executado automaticamente na primeira inicialização.
+O seed com dados iniciais (edificações, arquitetos, landing page) será executado automaticamente na primeira inicialização. O usuário administrador **não** é criado automaticamente — veja o passo 3.
 
 # 3. Configurar o Prisma
 
@@ -98,14 +98,26 @@ npx prisma db push
 npx prisma studio
 ```
 
-## 4. Rodar a aplicação
+## 4. Criar o usuário administrador
+
+Após o banco estar rodando e o Prisma configurado, crie o usuário admin inicial:
+
+```bash
+npm run seed:user
+```
+
+Esse script conecta diretamente ao MongoDB local (`localhost:27017`) e cria (ou atualiza) o usuário master. As credenciais padrão estão no topo de `scripts/userSeed.mjs` — edite antes de executar se quiser usar outros valores.
+
+> **Atenção:** esse passo é manual e deve ser feito uma vez por ambiente. Não roda automaticamente no `docker-compose up`.
+
+## 5. Rodar a aplicação
 
 ```bash
 npm run start:dev
 ```
 
 
-# 5. Acessar a Documentação (Swagger)
+## 6. Acessar a Documentação (Swagger)
 
 - Swagger UI: http://localhost:3001/api
 

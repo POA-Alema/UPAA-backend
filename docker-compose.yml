@@ -47,6 +47,9 @@ services:
       start_period: 20s
 
   mongo-seed:
+    # Popula edificações, arquitetos e landing page automaticamente.
+    # O usuário administrador NÃO é criado aqui — rode manualmente no host:
+    #   npm run seed:user
     image: mongo:6
     depends_on:
       mongo:

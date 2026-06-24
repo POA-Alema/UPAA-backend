@@ -9,20 +9,9 @@ const architectId = new ObjectId();
 const margsId = new ObjectId();
 const memorialId = new ObjectId();
 
-db.admin_users.deleteMany({});
 db.landing_page.deleteMany({});
 db.architects.deleteMany({});
 db.buildings.deleteMany({});
-
-db.admin_users.insertOne({
-    _id: adminId,
-    name: "Administrador Principal",
-    email: "admin@poaalema.com",
-    passwordHash: "$2b$10$seed.exemplo.hash",
-    role: "admin",
-    createdAt: new Date(),
-    updatedAt: new Date()
-});
 
 db.architects.insertOne({
     _id: architectId,

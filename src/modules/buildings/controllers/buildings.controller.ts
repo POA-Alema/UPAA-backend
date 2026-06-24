@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, Query, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { BuildingsService } from '../services/buildings.service';
 import { CreateBuildingDto } from '../dto/create-building.dto';
 import { UpdateBuildingDto } from '../dto/update-building.dto';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { S3Service } from 'src/Utils/S3.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { AdminRole } from '../../auth/constants/admin-role';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 
 export class UploadMetadataDto {
   type: string;
@@ -54,12 +58,18 @@ export class BuildingsController {
 
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @ApiOperation({ summary: 'Criar uma nova edificação' })
   create(@Body() createBuildingDto: CreateBuildingDto) {
     return this.buildingsService.create(createBuildingDto);
   }
 
   @Post('upload')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @UseInterceptors(FilesInterceptor('files'))
   async upload(
     @UploadedFiles() files: UploadedImageFile[],
@@ -94,12 +104,18 @@ export class BuildingsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @ApiOperation({ summary: 'Editar uma edificação' })
   update(@Param('id') id: string, @Body() updateBuildingDto: UpdateBuildingDto) {
     return this.buildingsService.update(id, updateBuildingDto);
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(AdminRole.ADMIN, AdminRole.CONTENT_MANAGER)
   @ApiOperation({ summary: 'Remover uma edificação' })
   remove(@Param('id') id: string) {
     return this.buildingsService.remove(id);
