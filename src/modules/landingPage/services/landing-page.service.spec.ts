@@ -123,6 +123,19 @@ describe('LandingPageService', () => {
       expect(typeof section.title).toBe('string');
       expect(typeof section.content).toBe('string');
     });
+
+    it('deve retornar todos os idiomas quando lang é all', async () => {
+      mockPrismaService.landingPage.findFirst.mockResolvedValue(mockLandingPage);
+      const result = await service.findPublic('all');
+      const section = result!.immigrationSection as typeof mockImmigrationSection;
+
+      expect(result!.mainTitle).toEqual({ pt: 'Uma Porto Alegre alemã' });
+      expect(section.title).toEqual({
+        pt: 'Imigração alemã',
+        en: 'German immigration',
+        de: 'Deutsche Einwanderung',
+      });
+    });
   });
 
   describe('create()', () => {
