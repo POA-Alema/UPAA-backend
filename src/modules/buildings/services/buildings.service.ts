@@ -27,7 +27,13 @@ function resolveField(i18nField: unknown, fallback: string, lang: SupportedLangu
   if (typeof i18nField === 'string') return i18nField;
   if (i18nField && typeof i18nField === 'object') {
     const map = i18nField as Record<string, string>;
-    return map[lang] ?? SUPPORTED_LANGS.map((l) => map[l]).find((v) => v !== undefined) ?? fallback;
+    const personName = [map.first, map.last].filter(Boolean).join(' ');
+    const resolved =
+      map[lang] ??
+      SUPPORTED_LANGS.map((l) => map[l]).find((v) => v !== undefined) ??
+      map.full ??
+      personName;
+    return resolved || fallback;
   }
   return fallback;
 }
@@ -78,6 +84,13 @@ export class BuildingsService {
         slug: true,
         status: true,
         architectId: true,
+        architect: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
         name: true,
         originalName: true,
         location: true,
@@ -144,6 +157,13 @@ export class BuildingsService {
         id: true,
         slug: true,
         architectId: true,
+        architect: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
         name: true,
         originalName: true,
         location: true,
@@ -171,6 +191,14 @@ export class BuildingsService {
       id: building.id,
       slug: building.slug,
       architect_id: building.architectId,
+      architect_slug: building.architect?.slug ?? null,
+      architect: building.architect
+        ? {
+            id: building.architect.id,
+            slug: building.architect.slug,
+            name: resolveField(building.architect.name, '', resolvedLang),
+          }
+        : null,
       name: resolveField(building.name, '', resolvedLang),
       original_name: building.originalName
         ? resolveField(building.originalName, '', resolvedLang)
@@ -301,6 +329,13 @@ export class BuildingsService {
         id: true,
         slug: true,
         name: true,
+        architect: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
         coordinates: true,
         description: true,
         mediaGallery: true,
@@ -333,6 +368,14 @@ export class BuildingsService {
         id: building.id,
         slug: building.slug,
         name,
+        architect: building.architect
+          ? {
+              id: building.architect.id,
+              slug: building.architect.slug,
+              name: resolveField(building.architect.name, '', resolvedLang),
+            }
+          : null,
+        architectPath: building.architect ? `/architects/${building.architect.slug}` : undefined,
         coordinates,
         coverImage,
         summary,
