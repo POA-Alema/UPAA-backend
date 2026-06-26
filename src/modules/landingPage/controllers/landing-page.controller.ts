@@ -39,7 +39,7 @@ export class LandingPageController {
     description:
       'Inclui immigrationSection. Retorna null se não houver ou se estiver inválida.',
   })
-  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de). Padrão: pt' })
+  @ApiQuery({ name: 'lang', required: false, description: 'Idioma (pt, en, de) ou all para edição. Padrão: pt' })
   @ApiResponse({ status: 200, description: 'Conteúdo da landing page' })
   getLandingPage(@Query('lang') lang = 'pt') {
     return this.landingPageService.findPublic(lang);

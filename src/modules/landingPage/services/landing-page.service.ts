@@ -35,14 +35,24 @@ export class LandingPageService {
    * Retorna null com segurança se não houver registro.
    */
   async findPublic(lang: string = 'pt') {
-    const resolvedLang = validateLanguage(lang);
+    if (lang !== 'all') {
+      const resolvedLang = validateLanguage(lang);
+      const landingPage = await this.prisma.landingPage.findFirst();
+
+      if (!landingPage) {
+        return null;
+      }
+
+      return translateLocalizedValue(landingPage, resolvedLang);
+    }
+
     const landingPage = await this.prisma.landingPage.findFirst();
 
     if (!landingPage) {
       return null;
     }
 
-    return translateLocalizedValue(landingPage, resolvedLang);
+    return landingPage;
   }
 
   /**
