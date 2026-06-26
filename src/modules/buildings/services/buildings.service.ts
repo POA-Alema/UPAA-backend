@@ -123,6 +123,7 @@ export class BuildingsService {
       restorationAndHeritage: dto.restorationAndHeritage
         ? toI18n(dto.restorationAndHeritage)
         : undefined,
+      heritage: dto.heritage,
       sources: dto.sources ?? [],
       features: dto.features ?? [],
     } as Record<string, unknown>;

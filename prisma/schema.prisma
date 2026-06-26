@@ -218,7 +218,8 @@ model Building {
   builtArea              String?
   currentOccupation      I18nText?
   restorationAndHeritage I18nText?
-
+  heritage               String?
+  
   description  I18nText
   history      I18nText
   features     BuildingFeature[]
